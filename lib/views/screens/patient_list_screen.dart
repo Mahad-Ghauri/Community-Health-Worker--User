@@ -17,7 +17,7 @@ class _PatientListScreenState extends State<PatientListScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  
+
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'all_patients';
   String _selectedSort = 'date';
@@ -30,11 +30,7 @@ class _PatientListScreenState extends State<PatientListScreen>
     'lost_to_followup',
   ];
 
-  final List<String> _sortOptions = [
-    'date',
-    'name',
-    'status',
-  ];
+  final List<String> _sortOptions = ['date', 'name', 'status'];
 
   @override
   void initState() {
@@ -43,11 +39,12 @@ class _PatientListScreenState extends State<PatientListScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
-    
+
     // Initialize patient data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final patientProvider = context.read<PatientProvider>();
@@ -145,8 +142,13 @@ class _PatientListScreenState extends State<PatientListScreen>
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search patients by name or ID...',
-                        hintStyle: GoogleFonts.poppins(color: Colors.grey.shade500),
-                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                        hintStyle: GoogleFonts.poppins(
+                          color: Colors.grey.shade500,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Colors.grey,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 onPressed: () {
@@ -154,7 +156,10 @@ class _PatientListScreenState extends State<PatientListScreen>
                                   // Apply filters when search is cleared
                                   _applyFilters();
                                 },
-                                icon: const Icon(Icons.clear, color: Colors.grey),
+                                icon: const Icon(
+                                  Icons.clear,
+                                  color: Colors.grey,
+                                ),
                               )
                             : null,
                         filled: true,
@@ -178,7 +183,7 @@ class _PatientListScreenState extends State<PatientListScreen>
                       },
                     ),
                   ),
-                  
+
                   // Filter chips
                   Container(
                     height: 50,
@@ -204,11 +209,9 @@ class _PatientListScreenState extends State<PatientListScreen>
                 ],
               ),
             ),
-            
+
             // Patient list content
-            Expanded(
-              child: _buildPatientList(),
-            ),
+            Expanded(child: _buildPatientList()),
           ],
         ),
       ),
@@ -264,11 +267,7 @@ class _PatientListScreenState extends State<PatientListScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.sort,
-            size: 16,
-            color: Colors.white.withOpacity(0.9),
-          ),
+          Icon(Icons.sort, size: 16, color: Colors.white.withOpacity(0.9)),
           const SizedBox(width: 4),
           Text(
             _getSortDisplayName(_selectedSort),
@@ -287,9 +286,7 @@ class _PatientListScreenState extends State<PatientListScreen>
     return Consumer<PatientProvider>(
       builder: (context, patientProvider, child) {
         if (patientProvider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (patientProvider.error != null) {
@@ -297,11 +294,7 @@ class _PatientListScreenState extends State<PatientListScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 80,
-                  color: Colors.red.shade400,
-                ),
+                Icon(Icons.error_outline, size: 80, color: Colors.red.shade400),
                 const SizedBox(height: 16),
                 Text(
                   'Error Loading Patients',
@@ -371,7 +364,10 @@ class _PatientListScreenState extends State<PatientListScreen>
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: MadadgarTheme.primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -388,89 +384,111 @@ class _PatientListScreenState extends State<PatientListScreen>
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Empty state
+                // Replace the entire empty state Expanded widget with this:
                 Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 80,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchController.text.isNotEmpty || _selectedFilter != 'all_patients' 
-                              ? 'No Patients Match Filters' 
-                              : 'No Patients Found',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade600,
+                  child: SingleChildScrollView(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 64, // Reduced from 80
+                            color: Colors.grey.shade400,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _searchController.text.isNotEmpty || _selectedFilter != 'all_patients'
-                              ? 'Try adjusting your search or filters'
-                              : 'Start by registering your first patient',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey.shade500,
+                          const SizedBox(height: 12), // Reduced from 16
+                          Text(
+                            _searchController.text.isNotEmpty ||
+                                    _selectedFilter != 'all_patients'
+                                ? 'No Patients Match Filters'
+                                : 'No Patients Found',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16, // Reduced from 18
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        if (_searchController.text.isNotEmpty || _selectedFilter != 'all_patients')
+                          const SizedBox(height: 6), // Reduced from 8
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              _searchController.text.isNotEmpty ||
+                                      _selectedFilter != 'all_patients'
+                                  ? 'Try adjusting your search or filters'
+                                  : 'Start by registering your first patient',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 20), // Reduced from 24
+                          if (_searchController.text.isNotEmpty ||
+                              _selectedFilter != 'all_patients')
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 10,
+                              ), // Reduced from 12
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _selectedFilter = 'all_patients';
+                                    _selectedSort = 'date';
+                                  });
+                                  _applyFilters();
+                                },
+                                icon: const Icon(Icons.clear_all),
+                                label: Text(
+                                  'Clear Filters',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, // Reduced from 24
+                                    vertical: 10, // Reduced from 12
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _selectedFilter = 'all_patients';
-                                _selectedSort = 'date';
-                              });
-                              _applyFilters();
-                            },
-                            icon: const Icon(Icons.clear_all),
+                            onPressed: () => Navigator.pushNamed(
+                              context,
+                              '/register-patient',
+                            ),
+                            icon: const Icon(Icons.person_add),
                             label: Text(
-                              'Clear Filters',
-                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                              'Register Patient',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: MadadgarTheme.primaryColor,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
+                                horizontal: 20, // Reduced from 24
+                                vertical: 10, // Reduced from 12
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
-                        const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          onPressed: () => Navigator.pushNamed(context, '/register-patient'),
-                          icon: const Icon(Icons.person_add),
-                          label: Text(
-                            'Register Patient',
-                            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: MadadgarTheme.primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -497,13 +515,16 @@ class _PatientListScreenState extends State<PatientListScreen>
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: MadadgarTheme.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      filteredPatients.length == totalPatients 
+                      filteredPatients.length == totalPatients
                           ? '${filteredPatients.length} patients'
                           : '${filteredPatients.length} of $totalPatients patients',
                       style: GoogleFonts.poppins(
@@ -516,7 +537,7 @@ class _PatientListScreenState extends State<PatientListScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Patient list
               Expanded(
                 child: ListView.builder(
@@ -536,20 +557,18 @@ class _PatientListScreenState extends State<PatientListScreen>
 
   Widget _buildPatientCard(Patient patient) {
     final statusColor = _getStatusColor(patient.tbStatus);
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           // Select patient and navigate to details
           context.read<PatientProvider>().selectPatientDirect(patient);
           Navigator.pushNamed(
-            context, 
+            context,
             '/patient-details',
             arguments: patient.patientId,
           );
@@ -566,7 +585,9 @@ class _PatientListScreenState extends State<PatientListScreen>
                   // Patient avatar
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: MadadgarTheme.primaryColor.withOpacity(0.1),
+                    backgroundColor: MadadgarTheme.primaryColor.withOpacity(
+                      0.1,
+                    ),
                     child: Text(
                       patient.name.substring(0, 1).toUpperCase(),
                       style: GoogleFonts.poppins(
@@ -577,7 +598,7 @@ class _PatientListScreenState extends State<PatientListScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Patient name and ID
                   Expanded(
                     child: Column(
@@ -601,10 +622,13 @@ class _PatientListScreenState extends State<PatientListScreen>
                       ],
                     ),
                   ),
-                  
+
                   // Status badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -620,9 +644,9 @@ class _PatientListScreenState extends State<PatientListScreen>
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Patient details row
               Row(
                 children: [
@@ -646,7 +670,7 @@ class _PatientListScreenState extends State<PatientListScreen>
                       ],
                     ),
                   ),
-                  
+
                   // Phone
                   Expanded(
                     child: Row(
@@ -669,9 +693,9 @@ class _PatientListScreenState extends State<PatientListScreen>
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // Registration date
               Row(
                 children: [
@@ -690,9 +714,9 @@ class _PatientListScreenState extends State<PatientListScreen>
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // Address
               Row(
                 children: [
@@ -759,7 +783,7 @@ class _PatientListScreenState extends State<PatientListScreen>
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) {
       return 'today';
     } else if (difference == 1) {
@@ -802,7 +826,7 @@ class _PatientListScreenState extends State<PatientListScreen>
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              
+
               // Header
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -841,7 +865,7 @@ class _PatientListScreenState extends State<PatientListScreen>
                   ],
                 ),
               ),
-              
+
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -858,10 +882,13 @@ class _PatientListScreenState extends State<PatientListScreen>
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._filterOptions.map((filter) => _buildModalFilterOption(filter, setModalState)),
-                      
+                      ..._filterOptions.map(
+                        (filter) =>
+                            _buildModalFilterOption(filter, setModalState),
+                      ),
+
                       const SizedBox(height: 24),
-                      
+
                       // Sort section
                       Text(
                         'Sort by',
@@ -872,12 +899,14 @@ class _PatientListScreenState extends State<PatientListScreen>
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ..._sortOptions.map((sort) => _buildModalSortOption(sort, setModalState)),
+                      ..._sortOptions.map(
+                        (sort) => _buildModalSortOption(sort, setModalState),
+                      ),
                     ],
                   ),
                 ),
               ),
-              
+
               // Apply button
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -930,12 +959,12 @@ class _PatientListScreenState extends State<PatientListScreen>
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? MadadgarTheme.primaryColor.withOpacity(0.1)
               : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? MadadgarTheme.primaryColor
                 : Colors.grey.shade200,
           ),
@@ -976,12 +1005,12 @@ class _PatientListScreenState extends State<PatientListScreen>
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? MadadgarTheme.primaryColor.withOpacity(0.1)
               : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? MadadgarTheme.primaryColor
                 : Colors.grey.shade200,
           ),
