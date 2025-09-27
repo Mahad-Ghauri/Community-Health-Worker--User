@@ -536,7 +536,7 @@ class _HouseholdMemberDetailsScreenState extends State<HouseholdMemberDetailsScr
                 children: [
                   _buildTestResultsSummary(results),
                   const SizedBox(height: 16),
-                  ...results.map((result) => _buildDetailedTestResultCard(result)),
+                  ...results.map((result) => _buildDetailedTestResultCard(result)).toList(),
                 ],
               ),
             );
@@ -1177,7 +1177,7 @@ class _HouseholdMemberDetailsScreenState extends State<HouseholdMemberDetailsScr
                     ],
                   ),
                 );
-              }),
+              }).toList(),
             ],
             
             // Follow-up info
@@ -1455,7 +1455,20 @@ class _HouseholdMemberDetailsScreenState extends State<HouseholdMemberDetailsScr
   }
 
   void _startNewScreening() {
-    Navigator.pushNamed(context, '/contact-screening', arguments: widget.member);
+    Navigator.pushNamed(context, '/contact-screening', arguments: {
+      'memberInfo': {
+        'name': widget.member.name,
+        'age': widget.member.age,
+        'gender': widget.member.gender,
+        'relationship': widget.member.relationship,
+        'phone': widget.member.phone,
+        'screened': widget.member.screened,
+        'screeningStatus': widget.member.screeningStatus,
+        'lastScreeningDate': widget.member.lastScreeningDate,
+      },
+      'patientId': widget.patientId,
+      'householdId': widget.householdId,
+    });
   }
 
   void _callMember() {

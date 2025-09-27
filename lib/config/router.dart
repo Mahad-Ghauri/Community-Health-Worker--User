@@ -118,16 +118,14 @@ class AppRouter {
         );
       case '/household-member-details':
         final args = settings.arguments;
-        
+
         if (args is HouseholdMember) {
-          return ElegantRoute.build(
-            HouseholdMemberDetailsScreen(member: args),
-          );
+          return ElegantRoute.build(HouseholdMemberDetailsScreen(member: args));
         } else if (args is Map<String, dynamic>) {
           final member = args['member'] as HouseholdMember?;
           final householdId = args['householdId'] as String?;
           final patientId = args['patientId'] as String?;
-          
+
           if (member != null) {
             return ElegantRoute.build(
               HouseholdMemberDetailsScreen(
@@ -177,6 +175,21 @@ class AppRouter {
             patientId = args['patientId'] as String?;
             householdId = args['householdId'] as String?;
             memberData = args['memberInfo'] as Map<String, dynamic>?;
+          } else if (settings.arguments is HouseholdMember) {
+            // Handle direct HouseholdMember object
+            final member = settings.arguments as HouseholdMember;
+            memberData = {
+              'name': member.name,
+              'age': member.age,
+              'gender': member.gender,
+              'relationship': member.relationship,
+              'phone': member.phone,
+              'screened': member.screened,
+              'screeningStatus': member.screeningStatus,
+              'lastScreeningDate': member.lastScreeningDate,
+            };
+            // Note: patientId and householdId will need to be passed separately
+            // or retrieved from the calling screen context
           }
         }
 

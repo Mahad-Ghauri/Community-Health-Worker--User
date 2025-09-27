@@ -993,7 +993,20 @@ class _HouseholdMembersScreenState extends State<HouseholdMembersScreen>
   }
 
   void _startScreening(HouseholdMember member) {
-    Navigator.pushNamed(context, '/contact-screening', arguments: member);
+    Navigator.pushNamed(context, '/contact-screening', arguments: {
+      'memberInfo': {
+        'name': member.name,
+        'age': member.age,
+        'gender': member.gender,
+        'relationship': member.relationship,
+        'phone': member.phone,
+        'screened': member.screened,
+        'screeningStatus': member.screeningStatus,
+        'lastScreeningDate': member.lastScreeningDate,
+      },
+      'patientId': widget.patientId,
+      'householdId': _household?.householdId,
+    });
   }
 
 

@@ -87,6 +87,14 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
     'diabetes_screening': false,
   };
 
+  // Referral fields
+  String? _selectedFacilityId;
+  String? _selectedFacilityName;
+  String? _referralReason;
+  String _referralUrgency = 'medium';
+  List<Map<String, dynamic>> _nearbyFacilities = [];
+  bool _isLoadingFacilities = false;
+
   String _overallRiskLevel = 'low';
   final List<String> _referralRecommendations = [];
 
@@ -159,6 +167,7 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
 
     _fadeController.forward();
     _loadMemberInfo();
+    _loadNearbyFacilities();
   }
 
   @override
@@ -181,6 +190,58 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
           'patientId': 'PAT001',
           'householdId': 'HH001',
         };
+  }
+
+  void _loadNearbyFacilities() async {
+    setState(() {
+      _isLoadingFacilities = true;
+    });
+
+    try {
+      final contactProvider = Provider.of<ContactTracingProvider>(
+        context,
+        listen: false,
+      );
+
+      // Load real facilities from Firestore
+      _nearbyFacilities = await contactProvider.getNearbyFacilities();
+      print('Loaded ${_nearbyFacilities.length} facilities from Firestore');
+
+      if (_nearbyFacilities.isEmpty) {
+        print('No facilities found in Firestore');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'No facilities available. Please add facilities to Firestore.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        _isLoadingFacilities = false;
+      });
+    } catch (e) {
+      print('Error loading facilities: $e');
+      _nearbyFacilities = [];
+      setState(() {
+        _isLoadingFacilities = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load facilities: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -1161,6 +1222,11 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
 
           const SizedBox(height: 16),
 
+          // Always show facility selection for testing
+          _buildFacilitySelectionCard(),
+
+          const SizedBox(height: 16),
+
           _buildScreeningSummaryCard(),
         ],
       ),
@@ -1368,6 +1434,189 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
                   ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFacilitySelectionCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_on, color: MadadgarTheme.primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Select Referral Facility',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Choose the nearest facility for referral:',
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
+            ),
+            Text(
+              'Debug: ${_nearbyFacilities.length} facilities loaded from Firestore',
+              style: GoogleFonts.poppins(fontSize: 12, color: Colors.red),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _loadNearbyFacilities();
+              },
+              child: Text('Refresh Facilities'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedFacilityId,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: _isLoadingFacilities
+                    ? 'Loading facilities...'
+                    : 'Select Facility',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                suffixIcon: _isLoadingFacilities
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : null,
+              ),
+              items: _isLoadingFacilities
+                  ? [
+                      DropdownMenuItem<String>(
+                        value: null,
+                        child: Text(
+                          'Loading facilities...',
+                          style: GoogleFonts.poppins(),
+                        ),
+                      ),
+                    ]
+                  : _nearbyFacilities.map((facility) {
+                      return DropdownMenuItem<String>(
+                        value: facility['facilityId'],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              facility['name'],
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              facility['distance'] > 0
+                                  ? '${facility['distance'].toStringAsFixed(1)} km • ${facility['type'].toString().replaceAll('_', ' ').toUpperCase()}'
+                                  : '${facility['type'].toString().replaceAll('_', ' ').toUpperCase()} • ${facility['address'] ?? 'No address'}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedFacilityId = value;
+                  if (value != null) {
+                    final facility = _nearbyFacilities.firstWhere(
+                      (f) => f['facilityId'] == value,
+                    );
+                    _selectedFacilityName = facility['name'];
+                  }
+                });
+              },
+            ),
+            if (_selectedFacilityId != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Referral Details',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _referralUrgency,
+                decoration: InputDecoration(
+                  labelText: 'Urgency Level',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'low',
+                    child: Text('Low Priority', style: GoogleFonts.poppins()),
+                  ),
+                  DropdownMenuItem(
+                    value: 'medium',
+                    child: Text(
+                      'Medium Priority',
+                      style: GoogleFonts.poppins(),
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: 'high',
+                    child: Text('High Priority', style: GoogleFonts.poppins()),
+                  ),
+                  DropdownMenuItem(
+                    value: 'urgent',
+                    child: Text('Urgent', style: GoogleFonts.poppins()),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _referralUrgency = value ?? 'medium';
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: _referralReason,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'Referral Reason',
+                  hintText: 'Specify why this referral is needed...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (value) {
+                  _referralReason = value;
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -1739,6 +1988,10 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
         gender: _memberInfo['gender'] ?? 'Unknown',
         symptoms: symptoms,
         notes: notes,
+        referredFacilityId: _selectedFacilityId,
+        referredFacilityName: _selectedFacilityName,
+        referralReason: _referralReason,
+        referralUrgency: _referralUrgency,
       );
 
       if (!mounted) return;
@@ -1817,7 +2070,9 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          _facilityReferralText(),
+                          _selectedFacilityId != null
+                              ? 'Referred to: $_selectedFacilityName (${_referralUrgency.toUpperCase()} priority)'
+                              : _facilityReferralText(),
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: Colors.blue,

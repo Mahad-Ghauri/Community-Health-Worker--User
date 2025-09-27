@@ -236,6 +236,10 @@ class ContactTracingProvider with ChangeNotifier {
     required String gender,
     required List<String> symptoms,
     required String notes,
+    String? referredFacilityId,
+    String? referredFacilityName,
+    String? referralReason,
+    String? referralUrgency,
   }) async {
     try {
       _setLoading(true);
@@ -270,7 +274,7 @@ class ContactTracingProvider with ChangeNotifier {
         }
       } catch (e) {
         // If resolution fails for any reason, bubble up a clear error
-        throw Exception('Failed to resolve householdId: $e');
+        throw Exception('Failed to resolve householdId: ${e.toString()}');
       }
 
       final contactId = firestore.collection('contactTracing').doc().id;
@@ -294,7 +298,12 @@ class ContactTracingProvider with ChangeNotifier {
         screenedBy: currentUser.uid,
         symptoms: symptoms,
         testResult: 'pending',
-        referralNeeded: symptoms.isNotEmpty,
+        referralNeeded: symptoms.isNotEmpty || referredFacilityId != null,
+        referredFacilityId: referredFacilityId,
+        referredFacilityName: referredFacilityName,
+        referralReason: referralReason,
+        referralUrgency: referralUrgency,
+        referralDate: referredFacilityId != null ? DateTime.now() : null,
         notes: notes,
       );
 
@@ -389,6 +398,133 @@ class ContactTracingProvider with ChangeNotifier {
 
   void _clearError() {
     _error = null;
+  }
+
+  /// Get nearby facilities for referral - Used by Screen 18: Contact Screening
+  Future<List<Map<String, dynamic>>> getNearbyFacilities({
+    int limit = 10,
+  }) async {
+    try {
+      // Load all active facilities from Firestore
+      final snapshot = await FirebaseFirestore.instance
+          .collection('facilities')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      final facilities = <Map<String, dynamic>>[];
+
+      // Get current location for distance calculation
+      Map<String, double>? currentLocation;
+      try {
+        final gpsService = GPSService();
+        currentLocation = await gpsService.getCurrentLocation();
+      } catch (e) {
+        print('GPS not available, facilities will be shown without distance');
+      }
+
+      for (final doc in snapshot.docs) {
+        final facilityData = doc.data();
+        final facilityLocation =
+            facilityData['location'] as Map<String, dynamic>?;
+
+        double distanceKm = 0.0;
+
+        // Calculate distance if GPS is available and facility has location
+        if (currentLocation != null &&
+            facilityLocation != null &&
+            facilityLocation['lat'] != null &&
+            facilityLocation['lng'] != null) {
+          try {
+            final gpsService = GPSService();
+            final distance = gpsService.calculateDistance(
+              lat1: currentLocation['lat']!,
+              lng1: currentLocation['lng']!,
+              lat2: facilityLocation['lat']!.toDouble(),
+              lng2: facilityLocation['lng']!.toDouble(),
+            );
+            distanceKm = distance / 1000; // Convert to kilometers
+          } catch (e) {
+            print('Error calculating distance for facility ${doc.id}: $e');
+          }
+        }
+
+        facilities.add({
+          'facilityId': doc.id,
+          'name': facilityData['name'] ?? 'Unknown Facility',
+          'type': facilityData['type'] ?? 'clinic',
+          'distance': distanceKm,
+          'contact': facilityData['contact'] ?? {},
+          'services': facilityData['services'] ?? [],
+          'location': facilityLocation,
+          'address': facilityData['address'] ?? '',
+          'description': facilityData['description'] ?? '',
+        });
+      }
+
+      // Sort by distance if GPS is available, otherwise by name
+      if (currentLocation != null) {
+        facilities.sort(
+          (a, b) =>
+              (a['distance'] as double).compareTo(b['distance'] as double),
+        );
+      } else {
+        facilities.sort(
+          (a, b) => (a['name'] as String).compareTo(b['name'] as String),
+        );
+      }
+
+      return facilities.take(limit).toList();
+    } catch (e) {
+      print('Error loading facilities from Firestore: $e');
+      // Return empty list instead of fallback to force using real data
+      return [];
+    }
+  }
+
+  /// Get fallback facilities when GPS is not available
+  List<Map<String, dynamic>> getFallbackFacilities() {
+    return [
+      {
+        'facilityId': 'facility_001',
+        'name': 'District TB Hospital',
+        'type': 'hospital',
+        'distance': 5.0,
+        'contact': {'phone': '+92 51 1234567', 'address': 'District Hospital'},
+        'services': ['tb_treatment', 'xray', 'lab_tests'],
+      },
+      {
+        'facilityId': 'facility_002',
+        'name': 'Community Health Center',
+        'type': 'health_center',
+        'distance': 2.5,
+        'contact': {'phone': '+92 51 7654321', 'address': 'Community Center'},
+        'services': ['tb_treatment', 'lab_tests'],
+      },
+      {
+        'facilityId': 'facility_003',
+        'name': 'Primary Care Clinic',
+        'type': 'clinic',
+        'distance': 1.2,
+        'contact': {'phone': '+92 51 1112223', 'address': 'Local Clinic'},
+        'services': ['tb_treatment'],
+      },
+      {
+        'facilityId': 'facility_004',
+        'name': 'Regional Medical Center',
+        'type': 'hospital',
+        'distance': 8.5,
+        'contact': {'phone': '+92 51 9998887', 'address': 'Regional Center'},
+        'services': ['tb_treatment', 'xray', 'lab_tests', 'specialist'],
+      },
+      {
+        'facilityId': 'facility_005',
+        'name': 'Mobile Health Unit',
+        'type': 'clinic',
+        'distance': 3.8,
+        'contact': {'phone': '+92 51 4445556', 'address': 'Mobile Unit'},
+        'services': ['tb_treatment', 'lab_tests'],
+      },
+    ];
   }
 }
 
