@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/core_models.dart';
 import '../services/audit_service.dart';
 import '../services/gps_service.dart';
+import '../services/error_handler.dart';
 
 /// Household Provider - Manages household and family member state
 /// Used by: Household Members (16), Add Household Member (17)
@@ -167,7 +168,7 @@ class HouseholdProvider with ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     notifyListeners();
   }
 
@@ -392,7 +393,7 @@ class ContactTracingProvider with ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     notifyListeners();
   }
 
@@ -693,7 +694,7 @@ class TreatmentAdherenceProvider with ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     notifyListeners();
   }
 
@@ -779,7 +780,7 @@ class NotificationProvider with ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     notifyListeners();
   }
 

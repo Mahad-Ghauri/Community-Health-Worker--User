@@ -4,13 +4,14 @@ import 'package:flutter/widgets.dart';
 import '../../models/core_models.dart';
 import '../services/patient_service.dart';
 import '../services/visit_service.dart';
+import '../services/error_handler.dart';
 
 /// Patient Provider - Manages patient state for the entire app
-/// Used by: Patient List (8), Patient Search (9), Patient Details (11), 
+/// Used by: Patient List (8), Patient Search (9), Patient Details (11),
 ///         Register New Patient (10), Edit Patient (12), Home Dashboard (6)
 class PatientProvider with ChangeNotifier {
   // =================== STATE VARIABLES ===================
-  
+
   List<Patient> _patients = [];
   List<Patient> _searchResults = [];
   Patient? _selectedPatient;
@@ -22,7 +23,7 @@ class PatientProvider with ChangeNotifier {
   String _sortBy = 'name';
 
   // =================== GETTERS ===================
-  
+
   List<Patient> get patients => _patients;
   List<Patient> get searchResults => _searchResults;
   Patient? get selectedPatient => _selectedPatient;
@@ -36,21 +37,24 @@ class PatientProvider with ChangeNotifier {
   // Filtered patients based on current filters
   List<Patient> get filteredPatients {
     List<Patient> filtered = List.from(_patients);
-    
+
     // Apply status filter
     if (_statusFilter != 'all_patients') {
       filtered = filtered.where((p) => p.tbStatus == _statusFilter).toList();
     }
-    
+
     // Apply search query
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((p) =>
-          p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          p.phone.contains(_searchQuery) ||
-          p.address.toLowerCase().contains(_searchQuery.toLowerCase())
-      ).toList();
+      filtered = filtered
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                p.phone.contains(_searchQuery) ||
+                p.address.toLowerCase().contains(_searchQuery.toLowerCase()),
+          )
+          .toList();
     }
-    
+
     // Apply sorting
     switch (_sortBy) {
       case 'name':
@@ -63,7 +67,7 @@ class PatientProvider with ChangeNotifier {
         filtered.sort((a, b) => a.tbStatus.compareTo(b.tbStatus));
         break;
     }
-    
+
     return filtered;
   }
 
@@ -80,7 +84,7 @@ class PatientProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       // Get patients stream and listen to updates
       PatientService.getAssignedPatients(
         searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
@@ -109,7 +113,7 @@ class PatientProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
       _searchQuery = query;
-      
+
       if (query.isEmpty) {
         _searchResults = [];
         _setLoading(false);
@@ -121,7 +125,7 @@ class PatientProvider with ChangeNotifier {
         nameQuery: query,
         limit: 20,
       );
-      
+
       _searchResults = results;
       _setLoading(false);
       notifyListeners();
@@ -181,7 +185,7 @@ class PatientProvider with ChangeNotifier {
       // Refresh patient list and stats
       await loadPatients();
       await loadPatientStats();
-      
+
       _setLoading(false);
       return patientId;
     } catch (e) {
@@ -196,7 +200,7 @@ class PatientProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       // First try to find the patient in the already loaded list
       Patient? patient;
       try {
@@ -204,16 +208,16 @@ class PatientProvider with ChangeNotifier {
       } catch (e) {
         patient = null;
       }
-      
+
       // If not found in list, fetch from Firestore
       patient ??= await PatientService.getPatientById(patientId);
-      
+
       if (patient == null) {
         throw Exception('Patient with ID $patientId not found');
       }
-      
+
       _selectedPatient = patient;
-      
+
       _setLoading(false);
       notifyListeners();
     } catch (e) {
@@ -247,7 +251,7 @@ class PatientProvider with ChangeNotifier {
       // Refresh selected patient and list
       await selectPatient(patientId);
       await loadPatients();
-      
+
       _setLoading(false);
       return true;
     } catch (e) {
@@ -269,28 +273,24 @@ class PatientProvider with ChangeNotifier {
   }
 
   /// Set filters for patient list - Used by Screen 8: Patient List
-  void setFilters({
-    String? searchQuery,
-    String? statusFilter,
-    String? sortBy,
-  }) {
+  void setFilters({String? searchQuery, String? statusFilter, String? sortBy}) {
     bool needsRefresh = false;
-    
+
     if (searchQuery != null && searchQuery != _searchQuery) {
       _searchQuery = searchQuery;
       needsRefresh = true;
     }
-    
+
     if (statusFilter != null && statusFilter != _statusFilter) {
       _statusFilter = statusFilter;
       needsRefresh = true;
     }
-    
+
     if (sortBy != null && sortBy != _sortBy) {
       _sortBy = sortBy;
       needsRefresh = true;
     }
-    
+
     if (needsRefresh) {
       loadPatients();
     }
@@ -313,12 +313,12 @@ class PatientProvider with ChangeNotifier {
   Future<void> updatePatientStatus(String patientId, String newStatus) async {
     try {
       await PatientService.updatePatientStatus(patientId, newStatus);
-      
+
       // Update local state
       if (_selectedPatient?.patientId == patientId) {
         await selectPatient(patientId);
       }
-      
+
       // Refresh patient list and stats
       await loadPatients();
       await loadPatientStats();
@@ -338,7 +338,7 @@ class PatientProvider with ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     // Defer notifyListeners to avoid calling during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();
@@ -360,7 +360,7 @@ class PatientProvider with ChangeNotifier {
 /// Used by: New Visit (14), Visit List (13), Visit Details (15), Home Dashboard (6)
 class VisitProvider with ChangeNotifier {
   // =================== STATE VARIABLES ===================
-  
+
   List<Visit> _visits = [];
   List<Visit> _recentVisits = [];
   Visit? _selectedVisit;
@@ -375,7 +375,7 @@ class VisitProvider with ChangeNotifier {
   String _sortBy = 'date';
 
   // =================== GETTERS ===================
-  
+
   List<Visit> get visits => _visits;
   List<Visit> get recentVisits => _recentVisits;
   Visit? get selectedVisit => _selectedVisit;
@@ -403,7 +403,7 @@ class VisitProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       // Get visits stream and listen to updates
       VisitService.getCHWVisits(
         startDate: _startDate,
@@ -443,7 +443,9 @@ class VisitProvider with ChangeNotifier {
       // Validate if visit can be created
       final canCreate = await VisitService.canCreateVisit(patientId: patientId);
       if (!canCreate) {
-        throw Exception('You cannot create another visit for this patient yet. Please wait at least 2 hours between visits.');
+        throw Exception(
+          'You cannot create another visit for this patient yet. Please wait at least 2 hours between visits.',
+        );
       }
 
       // Validate location if GPS is available
@@ -465,7 +467,7 @@ class VisitProvider with ChangeNotifier {
       await loadVisits();
       await loadRecentVisits();
       await loadVisitsSummary();
-      
+
       _setLoading(false);
       return visitId;
     } catch (e) {
@@ -508,10 +510,10 @@ class VisitProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final visit = await VisitService.getVisitById(visitId);
       _selectedVisit = visit;
-      
+
       _setLoading(false);
       notifyListeners();
     } catch (e) {
@@ -525,10 +527,12 @@ class VisitProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
-      final calendarData = await VisitService.getVisitsForCalendar(month: month);
+
+      final calendarData = await VisitService.getVisitsForCalendar(
+        month: month,
+      );
       _calendarVisits = calendarData;
-      
+
       _setLoading(false);
       notifyListeners();
     } catch (e) {
@@ -551,32 +555,32 @@ class VisitProvider with ChangeNotifier {
     String? sortBy,
   }) {
     bool needsRefresh = false;
-    
+
     if (startDate != _startDate) {
       _startDate = startDate;
       needsRefresh = true;
     }
-    
+
     if (endDate != _endDate) {
       _endDate = endDate;
       needsRefresh = true;
     }
-    
+
     if (patientFilter != _patientFilter) {
       _patientFilter = patientFilter;
       needsRefresh = true;
     }
-    
+
     if (visitTypeFilter != _visitTypeFilter) {
       _visitTypeFilter = visitTypeFilter;
       needsRefresh = true;
     }
-    
+
     if (sortBy != null && sortBy != _sortBy) {
       _sortBy = sortBy;
       needsRefresh = true;
     }
-    
+
     if (needsRefresh) {
       loadVisits();
     }
@@ -604,15 +608,12 @@ class VisitProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      await VisitService.updateVisitNotes(
-        visitId: visitId,
-        newNotes: newNotes,
-      );
+      await VisitService.updateVisitNotes(visitId: visitId, newNotes: newNotes);
 
       // Refresh selected visit and list
       await selectVisit(visitId);
       await loadVisits();
-      
+
       _setLoading(false);
       return true;
     } catch (e) {
@@ -636,7 +637,7 @@ class VisitProvider with ChangeNotifier {
       // Refresh selected visit and list
       await selectVisit(visitId);
       await loadVisits();
-      
+
       _setLoading(false);
       return true;
     } catch (e) {
@@ -657,7 +658,7 @@ class VisitProvider with ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     // Defer notifyListeners to avoid calling during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();

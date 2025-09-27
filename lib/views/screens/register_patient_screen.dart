@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:chw_tb/controllers/providers/patient_provider.dart';
 import 'package:chw_tb/controllers/services/gps_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chw_tb/controllers/services/error_handler.dart';
 
 class RegisterPatientScreen extends StatefulWidget {
   const RegisterPatientScreen({super.key});
@@ -37,7 +38,6 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
   String _selectedTbStatus = '';
   String _selectedFacility = '';
   DateTime? _diagnosisDate;
-  Map<String, double>? _currentLocation;
   List<Map<String, dynamic>> _facilities = [];
 
   final List<String> _genderOptions = ['Male', 'Female', 'Other'];
@@ -80,7 +80,7 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
   Future<void> _loadFacilities() async {
     try {
       setState(() => _isLoading = true);
-      
+
       // Load facilities from Firestore
       final snapshot = await FirebaseFirestore.instance
           .collection('facilities')
@@ -89,7 +89,7 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
           .get();
 
       final facilities = <Map<String, dynamic>>[];
-      
+
       for (final doc in snapshot.docs) {
         final data = doc.data();
         facilities.add({
@@ -121,21 +121,13 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
         String errorMessage = 'Unable to load facilities';
-        
-        // Provide user-friendly error messages
-        if (e.toString().contains('permission')) {
-          errorMessage = 'You do not have permission to view facilities. Please contact your administrator.';
-        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
-          errorMessage = 'Network error: Please check your internet connection and try again.';
-        } else if (e.toString().contains('timeout')) {
-          errorMessage = 'Request timed out. Please try again.';
-        } else {
-          errorMessage = 'Failed to load facilities. Please try again or contact support if the problem persists.';
-        }
-        
+
+        // Use error handler for user-friendly messages
+        errorMessage = ErrorHandler.getUserFriendlyMessage(e.toString());
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage, style: GoogleFonts.poppins()),
@@ -150,9 +142,8 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
   Future<void> _getCurrentLocation() async {
     try {
       final gpsService = GPSService();
-      final location = await gpsService.getCurrentLocation();
+      await gpsService.getCurrentLocation();
       setState(() {
-        _currentLocation = location;
         _gpsEnabled = true;
       });
     } catch (e) {
@@ -162,7 +153,10 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('GPS Error: $e'),
+            content: Text(
+              ErrorHandler.getUserFriendlyMessage('GPS Error: $e'),
+              style: GoogleFonts.poppins(),
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -215,7 +209,10 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration failed: $e'),
+            content: Text(
+              ErrorHandler.getUserFriendlyMessage('Registration failed: $e'),
+              style: GoogleFonts.poppins(),
+            ),
             backgroundColor: MadadgarTheme.errorColor,
           ),
         );
@@ -739,14 +736,16 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
           vertical: 16,
         ),
       ),
-      hint: _isLoading 
+      hint: _isLoading
           ? Text(
               'Loading facilities...',
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
               overflow: TextOverflow.ellipsis,
             )
           : Text(
-              _facilities.isEmpty ? 'No facilities available' : 'Select facility',
+              _facilities.isEmpty
+                  ? 'No facilities available'
+                  : 'Select facility',
               style: GoogleFonts.poppins(fontSize: 14),
               overflow: TextOverflow.ellipsis,
             ),
@@ -763,7 +762,9 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
             ),
           )
           .toList(),
-      onChanged: _facilities.isEmpty ? null : (value) => setState(() => _selectedFacility = value!),
+      onChanged: _facilities.isEmpty
+          ? null
+          : (value) => setState(() => _selectedFacility = value!),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Treatment facility is required';

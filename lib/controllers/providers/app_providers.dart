@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../../models/core_models.dart';
 import 'patient_provider.dart';
 import 'secondary_providers.dart';
+import '../services/error_handler.dart';
 
 /// Authentication Provider - Manages user authentication state
 /// Used by: Welcome Screen (1), CHW Registration (2), Login (3), Forgot Password (4)
@@ -223,7 +224,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _setError(String error) {
-    _error = error;
+    _error = ErrorHandler.getUserFriendlyMessage(error);
     notifyListeners();
   }
 
@@ -359,7 +360,7 @@ class AppStateProvider with ChangeNotifier {
       _isSyncing = false;
       notifyListeners();
     } catch (e) {
-      _error = 'Sync failed: $e';
+      _error = ErrorHandler.getUserFriendlyMessage('Sync failed: $e');
       _isSyncing = false;
       notifyListeners();
     }
@@ -437,17 +438,17 @@ class AppStateProvider with ChangeNotifier {
     // 1. Local storage for unsaved changes
     // 2. Queue of failed sync operations
     // 3. New records created offline
-    
+
     // For now, return a realistic count based on app state
     // This could be enhanced to check actual pending data
     if (!_isOnline) {
       return 5; // Assume some offline changes when offline
     }
-    
+
     if (_error != null) {
       return 3; // Some items failed to sync
     }
-    
+
     return 0; // All synced when online and no errors
   }
 }
@@ -489,7 +490,9 @@ class ReadOnlyDataProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to load facilities: $e';
+      _error = ErrorHandler.getUserFriendlyMessage(
+        'Failed to load facilities: $e',
+      );
       _isLoading = false;
       notifyListeners();
     }
@@ -513,7 +516,9 @@ class ReadOnlyDataProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to load assignments: $e';
+      _error = ErrorHandler.getUserFriendlyMessage(
+        'Failed to load assignments: $e',
+      );
       notifyListeners();
     }
   }
@@ -540,7 +545,9 @@ class ReadOnlyDataProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to load follow-ups: $e';
+      _error = ErrorHandler.getUserFriendlyMessage(
+        'Failed to load follow-ups: $e',
+      );
       notifyListeners();
     }
   }
@@ -560,7 +567,9 @@ class ReadOnlyDataProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      _error = 'Failed to load outcomes: $e';
+      _error = ErrorHandler.getUserFriendlyMessage(
+        'Failed to load outcomes: $e',
+      );
       notifyListeners();
     }
   }
