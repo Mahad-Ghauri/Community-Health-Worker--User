@@ -144,10 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   // Recent activity
                                   _buildRecentActivitySection(visitProvider, patientProvider),
                                   
-                                  const SizedBox(height: 24),
-                                  
-                                  // Weather widget for field work
-                                  _buildWeatherWidget(),
+                                
                                 ],
                               ),
                             ),
@@ -213,14 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               
               // Notification bell
-              IconButton(
-                onPressed: () => Navigator.pushNamed(context, '/notifications'),
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
+             
             ],
           ),
           
@@ -629,73 +619,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildWeatherWidget() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.wb_sunny,
-                  color: Colors.orange,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Weather Update',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(
-                  '28°C',
-                  style: GoogleFonts.poppins(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Partly Cloudy',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        'Good conditions for field visits',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  
   // Helper method to get time-based greeting
   String _getGreeting() {
     final hour = DateTime.now().hour;
