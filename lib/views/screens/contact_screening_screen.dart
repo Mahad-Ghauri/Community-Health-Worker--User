@@ -1467,9 +1467,14 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54),
             ),
             Text(
-              'Debug: ${_nearbyFacilities.length} facilities loaded from Firestore',
-              style: GoogleFonts.poppins(fontSize: 12, color: Colors.red),
+              '${_nearbyFacilities.length} facilities available nearby',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.white, // or MadadgarTheme.secondaryColor
+                fontWeight: FontWeight.w500,
+              ),
             ),
+
             ElevatedButton(
               onPressed: () {
                 _loadNearbyFacilities();
@@ -1499,6 +1504,7 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
                       )
                     : null,
               ),
+
               items: _isLoadingFacilities
                   ? [
                       DropdownMenuItem<String>(
@@ -1510,28 +1516,23 @@ class _ContactScreeningScreenState extends State<ContactScreeningScreen>
                       ),
                     ]
                   : _nearbyFacilities.map((facility) {
+                      // Create a single line description
+                      String facilityDescription = facility['name'];
+                      if (facility['distance'] > 0) {
+                        facilityDescription +=
+                            ' (${facility['distance'].toStringAsFixed(1)} km)';
+                      }
+
                       return DropdownMenuItem<String>(
                         value: facility['facilityId'],
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              facility['name'],
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              facility['distance'] > 0
-                                  ? '${facility['distance'].toStringAsFixed(1)} km • ${facility['type'].toString().replaceAll('_', ' ').toUpperCase()}'
-                                  : '${facility['type'].toString().replaceAll('_', ' ').toUpperCase()} • ${facility['address'] ?? 'No address'}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          facilityDescription,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       );
                     }).toList(),

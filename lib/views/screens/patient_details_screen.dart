@@ -810,7 +810,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Active Treatment',
+                  'Active',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: Colors.green,
