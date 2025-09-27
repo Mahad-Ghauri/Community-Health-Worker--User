@@ -206,9 +206,7 @@ class PatientProvider with ChangeNotifier {
       }
       
       // If not found in list, fetch from Firestore
-      if (patient == null) {
-        patient = await PatientService.getPatientById(patientId);
-      }
+      patient ??= await PatientService.getPatientById(patientId);
       
       if (patient == null) {
         throw Exception('Patient with ID $patientId not found');

@@ -260,7 +260,7 @@ class ContactTracingProvider with ChangeNotifier {
               .get();
           if (byPatient.docs.isEmpty) {
             throw Exception(
-              'No household found for index patient: ' + indexPatientId,
+              'No household found for index patient: $indexPatientId',
             );
           }
           // Prefer the field value, but doc.id is the source of truth
@@ -270,7 +270,7 @@ class ContactTracingProvider with ChangeNotifier {
         }
       } catch (e) {
         // If resolution fails for any reason, bubble up a clear error
-        throw Exception('Failed to resolve householdId: ' + e.toString());
+        throw Exception('Failed to resolve householdId: $e');
       }
 
       final contactId = firestore.collection('contactTracing').doc().id;

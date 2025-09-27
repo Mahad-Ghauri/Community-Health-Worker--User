@@ -374,7 +374,7 @@ class _NewVisitScreenState extends State<NewVisitScreen>
                         ),
                       ),
                     ),
-                    value: _selectedPatient,
+                    initialValue: _selectedPatient,
                     isExpanded: true, // ✅ Prevents overflow
                     items: patients.map((patient) {
                       return DropdownMenuItem<Patient>(

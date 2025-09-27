@@ -536,7 +536,7 @@ class _HouseholdMemberDetailsScreenState extends State<HouseholdMemberDetailsScr
                 children: [
                   _buildTestResultsSummary(results),
                   const SizedBox(height: 16),
-                  ...results.map((result) => _buildDetailedTestResultCard(result)).toList(),
+                  ...results.map((result) => _buildDetailedTestResultCard(result)),
                 ],
               ),
             );
@@ -1177,7 +1177,7 @@ class _HouseholdMemberDetailsScreenState extends State<HouseholdMemberDetailsScr
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
             
             // Follow-up info

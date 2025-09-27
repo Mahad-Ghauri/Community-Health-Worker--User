@@ -716,22 +716,22 @@ class _AdherenceTrackingScreenState extends State<AdherenceTrackingScreen>
     }
 
     // Helper to strip time components to date-only values
-    DateTime _d(DateTime d) => DateTime(d.year, d.month, d.day);
+    DateTime d(DateTime d) => DateTime(d.year, d.month, d.day);
 
     // Default fallback dates if no medication data (date-only)
-    final today = _d(DateTime.now());
+    final today = d(DateTime.now());
     final defaultStartDate = treatmentStartDate != null
-        ? _d(treatmentStartDate)
+        ? d(treatmentStartDate)
         : today.subtract(const Duration(days: 30));
 
     // Ensure we don't allow future dates beyond today; use date-only values
     final endCandidate = treatmentEndDate != null
-        ? _d(treatmentEndDate)
+        ? d(treatmentEndDate)
         : today;
     final actualEndDate = endCandidate.isAfter(today) ? today : endCandidate;
 
     // Clamp initial date within [defaultStartDate, actualEndDate]
-    DateTime initialDate = _d(_selectedDate);
+    DateTime initialDate = d(_selectedDate);
     if (initialDate.isBefore(defaultStartDate)) initialDate = defaultStartDate;
     if (initialDate.isAfter(actualEndDate)) initialDate = actualEndDate;
 
@@ -746,7 +746,7 @@ class _AdherenceTrackingScreenState extends State<AdherenceTrackingScreen>
       fieldLabelText: 'Enter date',
       fieldHintText: 'mm/dd/yyyy',
       selectableDayPredicate: (d) {
-        final dd = _d(d);
+        final dd = DateTime(d.year, d.month, d.day);
         return !dd.isBefore(defaultStartDate) && !dd.isAfter(actualEndDate);
       },
       builder: (context, child) {
