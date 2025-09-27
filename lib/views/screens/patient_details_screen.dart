@@ -435,75 +435,321 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   }
 
   Widget _buildVisitsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Row(
+    return Consumer<VisitProvider>(
+      builder: (context, visitProvider, child) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             children: [
-              Text(
-                'Visit History',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: MadadgarTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Total: 0',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: MadadgarTheme.primaryColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Row(
                 children: [
-                  Icon(
-                    Icons.home_outlined,
-                    size: 80,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
                   Text(
-                    'No Visits Recorded',
+                    'Visit History',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start visiting this patient to see visit history here',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: MadadgarTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    textAlign: TextAlign.center,
+                    child: Text(
+                      'Total: ${visitProvider.visits.where((v) => v.patientId == patientId).length}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: MadadgarTheme.primaryColor,
+                      ),
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              
+              Expanded(
+                child: _buildVisitsList(visitProvider),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVisitsList(VisitProvider visitProvider) {
+    if (visitProvider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (visitProvider.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 80,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error Loading Visits',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.red.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _getUserFriendlyErrorMessage(visitProvider.error!),
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.red.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => visitProvider.loadVisits(),
+              child: Text('Retry', style: GoogleFonts.poppins()),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final patientVisits = visitProvider.visits
+        .where((visit) => visit.patientId == patientId)
+        .toList();
+
+    if (patientVisits.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.home_outlined,
+              size: 80,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Visits Recorded',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Start visiting this patient to see visit history here',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: patientVisits.length,
+      itemBuilder: (context, index) {
+        final visit = patientVisits[index];
+        return _buildVisitCard(visit);
+      },
+    );
+  }
+
+  Widget _buildVisitCard(Visit visit) {
+    final statusColor = _getVisitStatusColor(visit.found);
+    final statusIcon = _getVisitStatusIcon(visit.found);
+    final statusText = visit.found ? 'Patient Found' : 'Patient Not Found';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        elevation: 2,
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(
+            context,
+            '/visit-details',
+            arguments: {'visitId': visit.visitId},
+          ),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row with status and date
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: statusColor.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(statusIcon, size: 14, color: statusColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusText,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      _formatVisitDate(visit.date),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Visit type and time
+                Row(
+                  children: [
+                    Icon(Icons.medical_services, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Visit Type: ${visit.visitType}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Time
+                Row(
+                  children: [
+                    Icon(Icons.schedule, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Time: ${_formatVisitTime(visit.date)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Notes preview (if any)
+                if (visit.notes.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.note, size: 16, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          visit.notes.length > 50 
+                            ? '${visit.notes.substring(0, 50)}...'
+                            : visit.notes,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                
+                const SizedBox(height: 8),
+                
+                // Tap to view hint
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Tap to view details',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: MadadgarTheme.primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: MadadgarTheme.primaryColor,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  Color _getVisitStatusColor(bool found) {
+    return found ? Colors.green : Colors.red;
+  }
+
+  IconData _getVisitStatusIcon(bool found) {
+    return found ? Icons.check_circle : Icons.cancel;
+  }
+
+  String _formatVisitDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = date.difference(now).inDays;
+    
+    if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Yesterday';
+    } else if (difference == -1) {
+      return 'Tomorrow';
+    } else if (difference > 1 && difference <= 7) {
+      return 'In $difference days';
+    } else if (difference < -1 && difference >= -7) {
+      return '${difference.abs()} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  String _formatVisitTime(DateTime date) {
+    final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
   }
 
   Widget _buildTreatmentTab() {
@@ -1375,6 +1621,23 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
     final minute = date.minute.toString().padLeft(2, '0');
     final period = date.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $period';
+  }
+
+  String _getUserFriendlyErrorMessage(String error) {
+    // Provide user-friendly error messages
+    if (error.contains('permission')) {
+      return 'You do not have permission to view this data. Please contact your administrator.';
+    } else if (error.contains('network') || error.contains('connection')) {
+      return 'Network error: Please check your internet connection and try again.';
+    } else if (error.contains('timeout')) {
+      return 'Request timed out. Please try again.';
+    } else if (error.contains('not authenticated')) {
+      return 'Authentication error: Please log in again.';
+    } else if (error.contains('not found')) {
+      return 'Data not found. The requested information may have been removed.';
+    } else {
+      return 'An error occurred while loading data. Please try again or contact support if the problem persists.';
+    }
   }
 
 

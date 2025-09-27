@@ -5,6 +5,7 @@ import 'package:chw_tb/config/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:chw_tb/controllers/providers/patient_provider.dart';
 import 'package:chw_tb/controllers/services/gps_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPatientScreen extends StatefulWidget {
   const RegisterPatientScreen({super.key});
@@ -78,34 +79,68 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
 
   Future<void> _loadFacilities() async {
     try {
-      // TODO: Load from Firestore facilities collection
-      // For now using mock data
+      setState(() => _isLoading = true);
+      
+      // Load facilities from Firestore
+      final snapshot = await FirebaseFirestore.instance
+          .collection('facilities')
+          .where('isActive', isEqualTo: true)
+          .orderBy('name')
+          .get();
+
+      final facilities = <Map<String, dynamic>>[];
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        facilities.add({
+          'id': doc.id,
+          'name': data['name'] ?? 'Unknown Facility',
+          'type': data['type'] ?? 'clinic',
+          'address': data['address'] ?? '',
+          'contact': data['contact'] ?? {},
+          'services': data['services'] ?? [],
+        });
+      }
+
       setState(() {
-        _facilities = [
-          {'id': 'fac001', 'name': 'Civil Hospital Karachi', 'type': 'public'},
-          {
-            'id': 'fac002',
-            'name': 'Aga Khan University Hospital',
-            'type': 'private',
-          },
-          {
-            'id': 'fac003',
-            'name': 'Jinnah Postgraduate Medical Centre',
-            'type': 'public',
-          },
-          {
-            'id': 'fac004',
-            'name': 'National Institute of Child Health',
-            'type': 'public',
-          },
-        ];
+        _facilities = facilities;
+        _isLoading = false;
       });
-    } catch (e) {
-      if (mounted) {
+
+      if (facilities.isEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load facilities: $e'),
+            content: Text(
+              'No facilities found. Please contact your administrator to add facilities.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      
+      if (mounted) {
+        String errorMessage = 'Unable to load facilities';
+        
+        // Provide user-friendly error messages
+        if (e.toString().contains('permission')) {
+          errorMessage = 'You do not have permission to view facilities. Please contact your administrator.';
+        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+          errorMessage = 'Network error: Please check your internet connection and try again.';
+        } else if (e.toString().contains('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else {
+          errorMessage = 'Failed to load facilities. Please try again or contact support if the problem persists.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage, style: GoogleFonts.poppins()),
             backgroundColor: MadadgarTheme.errorColor,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -704,11 +739,17 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
           vertical: 16,
         ),
       ),
-      hint: Text(
-        'Select facility',
-        style: GoogleFonts.poppins(fontSize: 14),
-        overflow: TextOverflow.ellipsis,
-      ),
+      hint: _isLoading 
+          ? Text(
+              'Loading facilities...',
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
+              overflow: TextOverflow.ellipsis,
+            )
+          : Text(
+              _facilities.isEmpty ? 'No facilities available' : 'Select facility',
+              style: GoogleFonts.poppins(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ),
       isExpanded: true,
       items: _facilities
           .map(
@@ -722,7 +763,7 @@ class _RegisterPatientScreenState extends State<RegisterPatientScreen>
             ),
           )
           .toList(),
-      onChanged: (value) => setState(() => _selectedFacility = value!),
+      onChanged: _facilities.isEmpty ? null : (value) => setState(() => _selectedFacility = value!),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Treatment facility is required';
