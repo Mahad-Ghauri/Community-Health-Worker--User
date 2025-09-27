@@ -8,7 +8,7 @@ import 'package:chw_tb/models/core_models.dart';
 
 class VisitDetailsScreen extends StatefulWidget {
   final String? visitId;
-  
+
   const VisitDetailsScreen({super.key, this.visitId});
 
   @override
@@ -20,8 +20,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   late TabController _tabController;
-  
-  bool _isLoading = true;
+
   Visit? _visit;
   Patient? _patient;
   String? _error;
@@ -33,11 +32,12 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _tabController = TabController(length: 4, vsync: this);
-    
+
     // Load visit data immediately
     _loadVisitData();
   }
@@ -53,203 +53,245 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
     if (widget.visitId == null) {
       setState(() {
         _error = 'Visit ID not provided';
-        _isLoading = false;
       });
       return;
     }
 
     try {
       final visitProvider = Provider.of<VisitProvider>(context, listen: false);
-      final patientProvider = Provider.of<PatientProvider>(context, listen: false);
-      
-      // Load visit details
+      final patientProvider = Provider.of<PatientProvider>(
+        context,
+        listen: false,
+      );
+
+      // Load visit details (this will handle its own loading state)
       await visitProvider.selectVisit(widget.visitId!);
       _visit = visitProvider.selectedVisit;
-      
+
       if (_visit != null) {
         // Load patient details
         _patient = patientProvider.patients
             .where((p) => p.patientId == _visit!.patientId)
             .firstOrNull;
       }
-      
-      setState(() => _isLoading = false);
-      
+
+      setState(() {});
+
       // Start fade animation after data is loaded
       _fadeController.forward();
     } catch (e) {
       setState(() {
         _error = 'Failed to load visit details: $e';
-        _isLoading = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Handle loading state
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: MadadgarTheme.backgroundColor,
-        appBar: AppBar(
-          title: Text('Visit Details', style: GoogleFonts.poppins(color: Colors.white)),
-          backgroundColor: MadadgarTheme.primaryColor,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // Handle error state
-    if (_error != null) {
-      return Scaffold(
-        backgroundColor: MadadgarTheme.backgroundColor,
-        appBar: AppBar(
-          title: Text('Visit Details', style: GoogleFonts.poppins(color: Colors.white)),
-          backgroundColor: MadadgarTheme.primaryColor,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Error Loading Visit',
-                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+    return Consumer<VisitProvider>(
+      builder: (context, visitProvider, child) {
+        // Handle loading state from provider
+        if (visitProvider.isLoading) {
+          return Scaffold(
+            backgroundColor: MadadgarTheme.backgroundColor,
+            appBar: AppBar(
+              title: Text(
+                'Visit Details',
+                style: GoogleFonts.poppins(color: Colors.white),
               ),
-              const SizedBox(height: 8),
-              Text(
-                _error!,
-                style: GoogleFonts.poppins(color: Colors.grey.shade600),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _loadVisitData,
-                child: Text('Retry', style: GoogleFonts.poppins()),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Handle missing visit data
-    if (_visit == null) {
-      return Scaffold(
-        backgroundColor: MadadgarTheme.backgroundColor,
-        appBar: AppBar(
-          title: Text('Visit Details', style: GoogleFonts.poppins(color: Colors.white)),
-          backgroundColor: MadadgarTheme.primaryColor,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.location_on_outlined, size: 64, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Visit Not Found',
-                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'The requested visit could not be found.',
-                style: GoogleFonts.poppins(color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: MadadgarTheme.backgroundColor,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            SliverAppBar(
-              expandedHeight: 280,
-              floating: false,
-              pinned: true,
               backgroundColor: MadadgarTheme.primaryColor,
               iconTheme: const IconThemeData(color: Colors.white),
-              actions: [
-                IconButton(
-                  onPressed: () => _editVisit(),
-                  icon: const Icon(Icons.edit),
-                  tooltip: 'Edit Visit',
-                ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: _handleMenuAction,
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'duplicate',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.copy),
-                          const SizedBox(width: 8),
-                          Text('Duplicate Visit', style: GoogleFonts.poppins()),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'export',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.download),
-                          const SizedBox(width: 8),
-                          Text('Export Report', style: GoogleFonts.poppins()),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Text('Delete Visit', style: GoogleFonts.poppins(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildHeaderContent(),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Handle error state
+        if (visitProvider.error != null || _error != null) {
+          return Scaffold(
+            backgroundColor: MadadgarTheme.backgroundColor,
+            appBar: AppBar(
+              title: Text(
+                'Visit Details',
+                style: GoogleFonts.poppins(color: Colors.white),
               ),
-              bottom: TabBar(
-                controller: _tabController,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                indicatorColor: Colors.white,
-                labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 12),
-                tabs: const [
-                  Tab(text: 'Overview'),
-                  Tab(text: 'Vitals'),
-                  Tab(text: 'Notes'),
-                  Tab(text: 'Media'),
+              backgroundColor: MadadgarTheme.primaryColor,
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error Loading Visit',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    visitProvider.error ?? _error ?? 'Unknown error',
+                    style: GoogleFonts.poppins(color: Colors.grey.shade600),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      _loadVisitData();
+                    },
+                    child: Text('Retry', style: GoogleFonts.poppins()),
+                  ),
                 ],
               ),
             ),
-          ],
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildOverviewTab(),
-              _buildVitalsTab(),
-              _buildNotesTab(),
-              _buildMediaTab(),
-            ],
+          );
+        }
+
+        // Handle missing visit data
+        if (_visit == null) {
+          return Scaffold(
+            backgroundColor: MadadgarTheme.backgroundColor,
+            appBar: AppBar(
+              title: Text(
+                'Visit Details',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+              backgroundColor: MadadgarTheme.primaryColor,
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Visit Not Found',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The requested visit could not be found.',
+                    style: GoogleFonts.poppins(color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: MadadgarTheme.backgroundColor,
+          body: FadeTransition(
+            opacity: _fadeAnimation,
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverAppBar(
+                  expandedHeight: 280,
+                  floating: false,
+                  pinned: true,
+                  backgroundColor: MadadgarTheme.primaryColor,
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  actions: [
+                    IconButton(
+                      onPressed: () => _editVisit(),
+                      icon: const Icon(Icons.edit),
+                      tooltip: 'Edit Visit',
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      onSelected: _handleMenuAction,
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'duplicate',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.copy),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Duplicate Visit',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'export',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.download),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Export Report',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Delete Visit',
+                                style: GoogleFonts.poppins(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: _buildHeaderContent(),
+                  ),
+                  bottom: TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white70,
+                    indicatorColor: Colors.white,
+                    labelStyle: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    tabs: const [
+                      Tab(text: 'Overview'),
+                      Tab(text: 'Vitals'),
+                      Tab(text: 'Notes'),
+                      Tab(text: 'Media'),
+                    ],
+                  ),
+                ),
+              ],
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildOverviewTab(),
+                  _buildVitalsTab(),
+                  _buildNotesTab(),
+                  _buildMediaTab(),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -274,7 +316,10 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
             children: [
               // Visit type badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(16),
@@ -288,9 +333,9 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Patient name
               Text(
                 _patient?.name ?? 'Unknown Patient',
@@ -300,13 +345,17 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
                   color: Colors.white,
                 ),
               ),
-              
+
               const SizedBox(height: 4),
-              
+
               // Visit date and time
               Row(
                 children: [
-                  Icon(Icons.access_time, color: Colors.white.withOpacity(0.9), size: 16),
+                  Icon(
+                    Icons.access_time,
+                    color: Colors.white.withOpacity(0.9),
+                    size: 16,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     _formatVisitDateTime(_visit!.date),
@@ -317,9 +366,9 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               // Patient found status
               Row(
                 children: [
@@ -352,17 +401,17 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
         children: [
           // Visit summary card
           _buildVisitSummaryCard(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Patient information card
           _buildPatientInfoCard(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Visit notes card
           _buildVisitNotesCard(),
-          
+
           if (_visit!.photos != null && _visit!.photos!.isNotEmpty) ...[
             const SizedBox(height: 16),
             _buildPhotosPreviewCard(),
@@ -379,14 +428,14 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
         children: [
           // Vital signs grid
           _buildVitalSignsGrid(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Vital signs chart
           _buildVitalSignsChart(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Previous readings comparison
           _buildPreviousReadingsCard(),
         ],
@@ -400,23 +449,28 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
       child: Column(
         children: [
           // CHW notes
-          _buildNotesCard('CHW Notes', 
-            _visit!.notes.isNotEmpty ? _visit!.notes : 'No notes recorded for this visit'),
-          
+          _buildNotesCard(
+            'CHW Notes',
+            _visit!.notes.isNotEmpty
+                ? _visit!.notes
+                : 'No notes recorded for this visit',
+          ),
+
           const SizedBox(height: 16),
-          
+
           // Patient feedback
-          _buildNotesCard('Patient Feedback',
-            'No patient feedback recorded'),
-          
+          _buildNotesCard('Patient Feedback', 'No patient feedback recorded'),
+
           const SizedBox(height: 16),
-          
+
           // Observations
-          _buildNotesCard('Clinical Observations',
-            'No clinical observations recorded'),
-          
+          _buildNotesCard(
+            'Clinical Observations',
+            'No clinical observations recorded',
+          ),
+
           const SizedBox(height: 16),
-          
+
           // Action items
           _buildActionItemsCard(),
         ],
@@ -431,14 +485,14 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
         children: [
           // Photos section
           _buildPhotosSection(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Documents section
           _buildDocumentsSection(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Audio recordings section
           _buildAudioRecordingsSection(),
         ],
@@ -468,13 +522,20 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
               ],
             ),
             const SizedBox(height: 16),
-            
+
             _buildSummaryRow('Visit Type', _formatVisitType(_visit!.visitType)),
-            _buildSummaryRow('Patient Name', _patient?.name ?? 'Unknown Patient'),
+            _buildSummaryRow(
+              'Patient Name',
+              _patient?.name ?? 'Unknown Patient',
+            ),
             _buildSummaryRow('Visit Date', _formatDate(_visit!.date)),
             _buildSummaryRow('Patient Found', _visit!.found ? 'Yes' : 'No'),
-            _buildSummaryRow('GPS Location', _visit!.gpsLocation.isNotEmpty ? 'Recorded' : 'Not available'),
-            if (_visit!.notes.isNotEmpty) _buildSummaryRow('Notes', _visit!.notes),
+            _buildSummaryRow(
+              'GPS Location',
+              _visit!.gpsLocation.isNotEmpty ? 'Recorded' : 'Not available',
+            ),
+            if (_visit!.notes.isNotEmpty)
+              _buildSummaryRow('Notes', _visit!.notes),
           ],
         ),
       ),
@@ -503,18 +564,24 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_patient != null) ...[
               _buildSummaryRow('Patient ID', _patient!.patientId),
               _buildSummaryRow('Age', '${_patient!.age} years'),
               _buildSummaryRow('Gender', _patient!.gender),
               _buildSummaryRow('Phone', _patient!.phone),
               _buildSummaryRow('Address', _patient!.address),
-              _buildSummaryRow('TB Status', _patient!.tbStatus.replaceAll('_', ' ').toUpperCase()),
+              _buildSummaryRow(
+                'TB Status',
+                _patient!.tbStatus.replaceAll('_', ' ').toUpperCase(),
+              ),
               _buildSummaryRow('Assigned CHW', _patient!.assignedCHW),
               _buildSummaryRow('Assigned Facility', _patient!.assignedFacility),
               if (_patient!.diagnosisDate != null)
-                _buildSummaryRow('Diagnosis Date', _formatDate(_patient!.diagnosisDate!)),
+                _buildSummaryRow(
+                  'Diagnosis Date',
+                  _formatDate(_patient!.diagnosisDate!),
+                ),
             ] else
               Text(
                 'Patient information not available',
@@ -548,7 +615,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_visit!.notes.isNotEmpty)
               Text(
                 _visit!.notes,
@@ -595,7 +662,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_visit!.photos != null && _visit!.photos!.isNotEmpty)
               SizedBox(
                 height: 100,
@@ -656,10 +723,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
             ),
           ),
         ],
@@ -769,10 +833,7 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
             const SizedBox(height: 8),
             Text(
               content,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                height: 1.5,
-              ),
+              style: GoogleFonts.poppins(fontSize: 14, height: 1.5),
             ),
           ],
         ),
@@ -908,7 +969,10 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
   void _duplicateVisit() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Duplicate visit feature coming soon!', style: GoogleFonts.poppins()),
+        content: Text(
+          'Duplicate visit feature coming soon!',
+          style: GoogleFonts.poppins(),
+        ),
       ),
     );
   }
@@ -916,7 +980,10 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
   void _exportReport() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Export report feature coming soon!', style: GoogleFonts.poppins()),
+        content: Text(
+          'Export report feature coming soon!',
+          style: GoogleFonts.poppins(),
+        ),
       ),
     );
   }
@@ -926,7 +993,10 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete Visit', style: GoogleFonts.poppins()),
-        content: Text('Are you sure you want to delete this visit?', style: GoogleFonts.poppins()),
+        content: Text(
+          'Are you sure you want to delete this visit?',
+          style: GoogleFonts.poppins(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -937,11 +1007,17 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Delete visit feature coming soon!', style: GoogleFonts.poppins()),
+                  content: Text(
+                    'Delete visit feature coming soon!',
+                    style: GoogleFonts.poppins(),
+                  ),
                 ),
               );
             },
-            child: Text('Delete', style: GoogleFonts.poppins(color: Colors.red)),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -969,33 +1045,53 @@ class _VisitDetailsScreenState extends State<VisitDetailsScreen>
   // Helper method to format visit date and time
   String _formatVisitDateTime(DateTime dateTime) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    
+
     final month = months[dateTime.month - 1];
     final day = dateTime.day;
     final year = dateTime.year;
     final hour = dateTime.hour;
     final minute = dateTime.minute;
-    
+
     String period = hour >= 12 ? 'PM' : 'AM';
     int displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    
+
     return '$day $month $year, ${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
   }
 
   // Helper method to format just the date
   String _formatDate(DateTime dateTime) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    
+
     final month = months[dateTime.month - 1];
     final day = dateTime.day;
     final year = dateTime.year;
-    
+
     return '$day $month $year';
   }
 }

@@ -471,6 +471,13 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   Widget _buildVisitsTab() {
     return Consumer<VisitProvider>(
       builder: (context, visitProvider, child) {
+        // Initialize visits if not already loaded
+        if (visitProvider.visits.isEmpty && !visitProvider.isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            visitProvider.initialize();
+          });
+        }
+
         return Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -486,6 +493,15 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                     ),
                   ),
                   const Spacer(),
+                  IconButton(
+                    onPressed: () => visitProvider.loadVisits(),
+                    icon: Icon(
+                      Icons.refresh,
+                      color: MadadgarTheme.primaryColor,
+                      size: 20,
+                    ),
+                    tooltip: 'Refresh visits',
+                  ),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -517,7 +533,8 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   }
 
   Widget _buildVisitsList(VisitProvider visitProvider) {
-    if (visitProvider.isLoading) {
+    // Only show loading when loading visits, not when selecting a visit
+    if (visitProvider.isLoading && visitProvider.visits.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -583,6 +600,30 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                '/new-visit',
+                arguments: {'patientId': patientId},
+              ),
+              icon: const Icon(Icons.add_location),
+              label: Text(
+                'Schedule First Visit',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MadadgarTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -601,18 +642,21 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
     final statusColor = _getVisitStatusColor(visit.found);
     final statusIcon = _getVisitStatusIcon(visit.found);
     final statusText = visit.found ? 'Patient Found' : 'Patient Not Found';
+    final visitTypeColor = _getVisitTypeColor(visit.visitType);
+    final visitTypeIcon = _getVisitTypeIcon(visit.visitType);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Card(
         elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
           onTap: () => Navigator.pushNamed(
             context,
             '/visit-details',
-            arguments: {'visitId': visit.visitId},
+            arguments: visit.visitId,
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -653,6 +697,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -660,63 +705,132 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
                 const SizedBox(height: 12),
 
-                // Visit type and time
+                // Visit type with icon
                 Row(
                   children: [
-                    Icon(
-                      Icons.medical_services,
-                      size: 16,
-                      color: Colors.grey.shade600,
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: visitTypeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        visitTypeIcon,
+                        size: 16,
+                        color: visitTypeColor,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Visit Type: ${visit.visitType}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _formatVisitType(visit.visitType),
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            'Time: ${_formatVisitTime(visit.date)}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 8),
-
-                // Time
-                Row(
-                  children: [
-                    Icon(Icons.schedule, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Time: ${_formatVisitTime(visit.date)}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Colors.black87,
+                // GPS Location info
+                if (visit.gpsLocation.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey.shade600,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'GPS: ${visit.gpsLocation['latitude']?.toStringAsFixed(4) ?? 'N/A'}, ${visit.gpsLocation['longitude']?.toStringAsFixed(4) ?? 'N/A'}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                // Photos indicator
+                if (visit.photos != null && visit.photos!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.photo, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${visit.photos!.length} photo(s)',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
                 // Notes preview (if any)
                 if (visit.notes.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.note, size: 16, color: Colors.grey.shade600),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          visit.notes.length > 50
-                              ? '${visit.notes.substring(0, 50)}...'
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.note,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Notes:',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          visit.notes.length > 100
+                              ? '${visit.notes.substring(0, 100)}...'
                               : visit.notes,
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: Colors.grey.shade700,
-                            fontStyle: FontStyle.italic,
+                            height: 1.3,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
 
@@ -756,6 +870,57 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
   IconData _getVisitStatusIcon(bool found) {
     return found ? Icons.check_circle : Icons.cancel;
+  }
+
+  Color _getVisitTypeColor(String visitType) {
+    switch (visitType.toLowerCase()) {
+      case 'home_visit':
+        return Colors.blue;
+      case 'follow_up':
+        return Colors.green;
+      case 'tracing':
+        return Colors.orange;
+      case 'medicine_delivery':
+        return Colors.purple;
+      case 'counseling':
+        return Colors.teal;
+      default:
+        return MadadgarTheme.primaryColor;
+    }
+  }
+
+  IconData _getVisitTypeIcon(String visitType) {
+    switch (visitType.toLowerCase()) {
+      case 'home_visit':
+        return Icons.home;
+      case 'follow_up':
+        return Icons.schedule;
+      case 'tracing':
+        return Icons.search;
+      case 'medicine_delivery':
+        return Icons.local_pharmacy;
+      case 'counseling':
+        return Icons.chat_bubble;
+      default:
+        return Icons.location_on;
+    }
+  }
+
+  String _formatVisitType(String visitType) {
+    switch (visitType.toLowerCase()) {
+      case 'home_visit':
+        return 'Home Visit';
+      case 'follow_up':
+        return 'Follow-up';
+      case 'tracing':
+        return 'Contact Tracing';
+      case 'medicine_delivery':
+        return 'Medicine Delivery';
+      case 'counseling':
+        return 'Counseling';
+      default:
+        return visitType.replaceAll('_', ' ').toUpperCase();
+    }
   }
 
   String _formatVisitDate(DateTime date) {
