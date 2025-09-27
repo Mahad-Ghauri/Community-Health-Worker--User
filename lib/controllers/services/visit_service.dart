@@ -30,10 +30,10 @@ class VisitService {
 
       // Generate unique visit ID
       final visitId = _firestore.collection('visits').doc().id;
-      
+
       // Get current GPS location with retry
       final gpsLocation = await _gpsService.getCurrentLocationWithRetry();
-      
+
       final visit = Visit(
         visitId: visitId,
         patientId: patientId,
@@ -100,10 +100,16 @@ class VisitService {
 
     // Apply date filters
     if (startDate != null) {
-      query = query.where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+      query = query.where(
+        'date',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+      );
     }
     if (endDate != null) {
-      query = query.where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+      query = query.where(
+        'date',
+        isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+      );
     }
 
     // Apply visit type filter
@@ -131,8 +137,9 @@ class VisitService {
 
       // Apply patient filter on client side
       if (patientFilter != null && patientFilter.isNotEmpty) {
-        visits = visits.where((visit) =>
-            visit.patientId.contains(patientFilter)).toList();
+        visits = visits
+            .where((visit) => visit.patientId.contains(patientFilter))
+            .toList();
       }
 
       return visits;
@@ -146,18 +153,20 @@ class VisitService {
         .where('patientId', isEqualTo: patientId)
         .orderBy('date', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Visit.fromFirestore(doc.data() as Map<String, dynamic>))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    Visit.fromFirestore(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
   }
 
   /// Get single visit details - Used by Screen 15: Visit Details
   static Future<Visit?> getVisitById(String visitId) async {
     try {
-      final doc = await _firestore
-          .collection('visits')
-          .doc(visitId)
-          .get();
+      final doc = await _firestore.collection('visits').doc(visitId).get();
 
       if (doc.exists) {
         return Visit.fromFirestore(doc.data() as Map<String, dynamic>);
@@ -179,9 +188,14 @@ class VisitService {
         .orderBy('date', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Visit.fromFirestore(doc.data() as Map<String, dynamic>))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    Visit.fromFirestore(doc.data() as Map<String, dynamic>),
+              )
+              .toList(),
+        );
   }
 
   /// Get visits summary for dashboard - Used by Screen 6: Home Dashboard
@@ -217,8 +231,9 @@ class VisitService {
         'patients_not_found': visits.where((v) => !v.found).length,
         'visits_by_type': _groupVisitsByType(visits),
         'visits_by_date': _groupVisitsByDate(visits),
-        'success_rate': visits.isEmpty ? 0.0 : 
-            (visits.where((v) => v.found).length / visits.length) * 100,
+        'success_rate': visits.isEmpty
+            ? 0.0
+            : (visits.where((v) => v.found).length / visits.length) * 100,
       };
     } catch (e) {
       throw Exception('Failed to get visits summary: $e');
@@ -239,7 +254,10 @@ class VisitService {
       final snapshot = await _firestore
           .collection('visits')
           .where('chwId', isEqualTo: currentUser.uid)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+          .where(
+            'date',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth),
+          )
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
           .orderBy('date')
           .get();
@@ -251,7 +269,11 @@ class VisitService {
       // Group visits by date
       final Map<DateTime, List<Visit>> visitsByDate = {};
       for (final visit in visits) {
-        final dateKey = DateTime(visit.date.year, visit.date.month, visit.date.day);
+        final dateKey = DateTime(
+          visit.date.year,
+          visit.date.month,
+          visit.date.day,
+        );
         if (visitsByDate.containsKey(dateKey)) {
           visitsByDate[dateKey]!.add(visit);
         } else {
@@ -273,10 +295,7 @@ class VisitService {
     required String newNotes,
   }) async {
     try {
-      await _firestore
-          .collection('visits')
-          .doc(visitId)
-          .update({
+      await _firestore.collection('visits').doc(visitId).update({
         'notes': newNotes,
         'updatedAt': Timestamp.now(),
       });
@@ -292,6 +311,53 @@ class VisitService {
     }
   }
 
+  /// Complete a scheduled visit - Used for updating visit status and details
+  static Future<void> completeVisit({
+    required String visitId,
+    required bool found,
+    required String notes,
+    List<String>? photos,
+  }) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) throw Exception('User not authenticated');
+
+      final visit = await getVisitById(visitId);
+      if (visit == null) throw Exception('Visit not found');
+
+      // Verify the visit belongs to current CHW
+      if (visit.chwId != currentUser.uid) {
+        throw Exception('Unauthorized: Visit does not belong to current CHW');
+      }
+
+      // Get current GPS location
+      final gpsLocation = await _gpsService.getCurrentLocationWithRetry();
+
+      // Update visit with completion details
+      await _firestore.collection('visits').doc(visitId).update({
+        'found': found,
+        'notes': notes,
+        'gpsLocation': gpsLocation,
+        'completedAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+        if (photos != null && photos.isNotEmpty) 'photos': photos,
+      });
+
+      // Create audit log for visit completion
+      await _auditService.logAction(
+        action: 'completed_visit',
+        what: visitId,
+        additionalData: {
+          'patientId': visit.patientId,
+          'found': found,
+          'notes': notes,
+        },
+      );
+    } catch (e) {
+      throw Exception('Failed to complete visit: $e');
+    }
+  }
+
   /// Add photos to existing visit
   static Future<void> addPhotosToVisit({
     required String visitId,
@@ -303,10 +369,7 @@ class VisitService {
 
       final updatedPhotos = [...(visit.photos ?? []), ...photoUrls];
 
-      await _firestore
-          .collection('visits')
-          .doc(visitId)
-          .update({
+      await _firestore.collection('visits').doc(visitId).update({
         'photos': updatedPhotos,
         'updatedAt': Timestamp.now(),
       });
@@ -340,7 +403,9 @@ class VisitService {
       if (!patientDoc.exists) return false;
 
       final patientData = patientDoc.data() as Map<String, dynamic>;
-      final patientLocation = Map<String, double>.from(patientData['gpsLocation'] ?? {});
+      final patientLocation = Map<String, double>.from(
+        patientData['gpsLocation'] ?? {},
+      );
 
       if (patientLocation.isEmpty) return true; // Allow if no patient location
 
@@ -364,7 +429,9 @@ class VisitService {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return false;
 
-      final cutoffTime = DateTime.now().subtract(Duration(hours: minimumHoursBetweenVisits));
+      final cutoffTime = DateTime.now().subtract(
+        Duration(hours: minimumHoursBetweenVisits),
+      );
 
       final snapshot = await _firestore
           .collection('visits')
@@ -465,15 +532,16 @@ class VisitService {
     }
 
     return weeklyData.entries.map((entry) {
-      final total = entry.value['total']!;
-      final found = entry.value['found']!;
-      return {
-        'week': entry.key,
-        'total_visits': total,
-        'successful_visits': found,
-        'success_rate': total > 0 ? (found / total) * 100 : 0.0,
-      };
-    }).toList()..sort((a, b) => (a['week'] as String).compareTo(b['week'] as String));
+        final total = entry.value['total']!;
+        final found = entry.value['found']!;
+        return {
+          'week': entry.key,
+          'total_visits': total,
+          'successful_visits': found,
+          'success_rate': total > 0 ? (found / total) * 100 : 0.0,
+        };
+      }).toList()
+      ..sort((a, b) => (a['week'] as String).compareTo(b['week'] as String));
   }
 
   /// Get week key for grouping (YYYY-WW format)

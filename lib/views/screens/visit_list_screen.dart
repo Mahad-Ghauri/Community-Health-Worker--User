@@ -18,7 +18,7 @@ class _VisitListScreenState extends State<VisitListScreen>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   late TabController _tabController;
-  
+
   String _selectedView = 'list'; // list, calendar, map
   String _selectedFilter = 'all';
 
@@ -37,12 +37,13 @@ class _VisitListScreenState extends State<VisitListScreen>
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _tabController = TabController(length: 3, vsync: this);
     _fadeController.forward();
-    
+
     // Initialize visit data when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final visitProvider = Provider.of<VisitProvider>(context, listen: false);
@@ -79,105 +80,116 @@ class _VisitListScreenState extends State<VisitListScreen>
     return Consumer2<VisitProvider, PatientProvider>(
       builder: (context, visitProvider, patientProvider, child) {
         return Scaffold(
-      backgroundColor: MadadgarTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Visits',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: MadadgarTheme.primaryColor,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            onPressed: _showFilterDialog,
-            icon: const Icon(Icons.filter_list),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) => setState(() => _selectedView = value),
-            icon: const Icon(Icons.view_module),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'list',
-                child: Row(
-                  children: [
-                    Icon(Icons.list, color: MadadgarTheme.primaryColor),
-                    const SizedBox(width: 8),
-                    const Text('List View'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'calendar',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_month, color: MadadgarTheme.primaryColor),
-                    const SizedBox(width: 8),
-                    const Text('Calendar View'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'map',
-                child: Row(
-                  children: [
-                    Icon(Icons.map, color: MadadgarTheme.primaryColor),
-                    const SizedBox(width: 8),
-                    const Text('Map View'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.7),
-          indicatorColor: Colors.white,
-          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-          tabs: const [
-            Tab(text: 'All Visits'),
-            Tab(text: 'Completed'),
-            Tab(text: 'Scheduled'),
-          ],
-        ),
-      ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            // Filter chip
-            if (_selectedFilter != 'all') _buildActiveFilterChip(),
-            
-            // Content based on selected view
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildVisitContent('all', visitProvider, patientProvider),
-                  _buildVisitContent('completed', visitProvider, patientProvider),
-                  _buildVisitContent('scheduled', visitProvider, patientProvider),
-                ],
+          backgroundColor: MadadgarTheme.backgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'Visits',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/new-visit'),
-        backgroundColor: MadadgarTheme.secondaryColor,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_location),
-        label: Text(
-          'New Visit',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
+            backgroundColor: MadadgarTheme.primaryColor,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                onPressed: _showFilterDialog,
+                icon: const Icon(Icons.filter_list),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) => setState(() => _selectedView = value),
+                icon: const Icon(Icons.view_module),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'list',
+                    child: Row(
+                      children: [
+                        Icon(Icons.list, color: MadadgarTheme.primaryColor),
+                        const SizedBox(width: 8),
+                        const Text('List View'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'calendar',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_month,
+                          color: MadadgarTheme.primaryColor,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Calendar View'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'map',
+                    child: Row(
+                      children: [
+                        Icon(Icons.map, color: MadadgarTheme.primaryColor),
+                        const SizedBox(width: 8),
+                        const Text('Map View'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white.withOpacity(0.7),
+              indicatorColor: Colors.white,
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              tabs: const [
+                Tab(text: 'All Visits'),
+                Tab(text: 'Completed'),
+                Tab(text: 'Scheduled'),
+              ],
+            ),
+          ),
+          body: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Column(
+              children: [
+                // Filter chip
+                if (_selectedFilter != 'all') _buildActiveFilterChip(),
+
+                // Content based on selected view
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildVisitContent('all', visitProvider, patientProvider),
+                      _buildVisitContent(
+                        'completed',
+                        visitProvider,
+                        patientProvider,
+                      ),
+                      _buildVisitContent(
+                        'scheduled',
+                        visitProvider,
+                        patientProvider,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => Navigator.pushNamed(context, '/new-visit'),
+            backgroundColor: MadadgarTheme.secondaryColor,
+            foregroundColor: Colors.white,
+            icon: const Icon(Icons.add_location),
+            label: Text(
+              'New Visit',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+          ),
+        );
       },
     );
   }
@@ -197,11 +209,7 @@ class _VisitListScreenState extends State<VisitListScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.filter_alt,
-                  size: 16,
-                  color: Colors.white,
-                ),
+                Icon(Icons.filter_alt, size: 16, color: Colors.white),
                 const SizedBox(width: 4),
                 Text(
                   _getFilterDisplayName(_selectedFilter),
@@ -214,11 +222,7 @@ class _VisitListScreenState extends State<VisitListScreen>
                 const SizedBox(width: 4),
                 GestureDetector(
                   onTap: () => setState(() => _selectedFilter = 'all'),
-                  child: const Icon(
-                    Icons.close,
-                    size: 16,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.close, size: 16, color: Colors.white),
                 ),
               ],
             ),
@@ -228,7 +232,11 @@ class _VisitListScreenState extends State<VisitListScreen>
     );
   }
 
-  Widget _buildVisitContent(String tabType, VisitProvider visitProvider, PatientProvider patientProvider) {
+  Widget _buildVisitContent(
+    String tabType,
+    VisitProvider visitProvider,
+    PatientProvider patientProvider,
+  ) {
     switch (_selectedView) {
       case 'calendar':
         return _buildCalendarView(tabType);
@@ -239,10 +247,17 @@ class _VisitListScreenState extends State<VisitListScreen>
     }
   }
 
-  Widget _buildListView(String tabType, VisitProvider visitProvider, PatientProvider patientProvider) {
+  Widget _buildListView(
+    String tabType,
+    VisitProvider visitProvider,
+    PatientProvider patientProvider,
+  ) {
     // Filter visits based on tab type and current filter
-    List<Visit> filteredVisits = _getFilteredVisits(visitProvider.visits, tabType);
-    
+    List<Visit> filteredVisits = _getFilteredVisits(
+      visitProvider.visits,
+      tabType,
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -266,7 +281,9 @@ class _VisitListScreenState extends State<VisitListScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  visitProvider.isLoading ? 'Loading...' : '${filteredVisits.length} visits',
+                  visitProvider.isLoading
+                      ? 'Loading...'
+                      : '${filteredVisits.length} visits',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -277,23 +294,23 @@ class _VisitListScreenState extends State<VisitListScreen>
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Visit list or empty state
           Expanded(
             child: visitProvider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : filteredVisits.isEmpty
-                    ? _buildEmptyState(tabType)
-                    : ListView.builder(
-                        itemCount: filteredVisits.length,
-                        itemBuilder: (context, index) {
-                          final visit = filteredVisits[index];
-                          final patient = patientProvider.patients
-                              .where((p) => p.patientId == visit.patientId)
-                              .firstOrNull;
-                          return _buildVisitCard(visit, patient);
-                        },
-                      ),
+                ? _buildEmptyState(tabType)
+                : ListView.builder(
+                    itemCount: filteredVisits.length,
+                    itemBuilder: (context, index) {
+                      final visit = filteredVisits[index];
+                      final patient = patientProvider.patients
+                          .where((p) => p.patientId == visit.patientId)
+                          .firstOrNull;
+                      return _buildVisitCard(visit, patient);
+                    },
+                  ),
           ),
         ],
       ),
@@ -303,37 +320,44 @@ class _VisitListScreenState extends State<VisitListScreen>
   // Helper method to filter visits based on tab type and date filters
   List<Visit> _getFilteredVisits(List<Visit> visits, String tabType) {
     DateTime now = DateTime.now();
-    
-    List<Visit> filtered = visits.where((visit) {
-      // Apply tab type filter
-      switch (tabType) {
-        case 'completed':
-          return visit.found; // Assuming completed means patient was found
-        case 'scheduled':
-          return !visit.found; // Assuming scheduled means not completed yet
-        default: // 'all'
-          return true;
-      }
-    }).where((visit) {
-      // Apply date filter
-      switch (_selectedFilter) {
-        case 'today':
-          return visit.date.year == now.year &&
-                 visit.date.month == now.month &&
-                 visit.date.day == now.day;
-        case 'this_week':
-          DateTime weekStart = now.subtract(Duration(days: now.weekday - 1));
-          DateTime weekEnd = weekStart.add(Duration(days: 6));
-          return visit.date.isAfter(weekStart.subtract(Duration(days: 1))) &&
-                 visit.date.isBefore(weekEnd.add(Duration(days: 1)));
-        case 'completed':
-          return visit.found;
-        case 'scheduled':
-          return !visit.found;
-        default: // 'all'
-          return true;
-      }
-    }).toList();
+
+    List<Visit> filtered = visits
+        .where((visit) {
+          // Apply tab type filter
+          switch (tabType) {
+            case 'completed':
+              return visit.found; // Assuming completed means patient was found
+            case 'scheduled':
+              return !visit.found; // Assuming scheduled means not completed yet
+            default: // 'all'
+              return true;
+          }
+        })
+        .where((visit) {
+          // Apply date filter
+          switch (_selectedFilter) {
+            case 'today':
+              return visit.date.year == now.year &&
+                  visit.date.month == now.month &&
+                  visit.date.day == now.day;
+            case 'this_week':
+              DateTime weekStart = now.subtract(
+                Duration(days: now.weekday - 1),
+              );
+              DateTime weekEnd = weekStart.add(Duration(days: 6));
+              return visit.date.isAfter(
+                    weekStart.subtract(Duration(days: 1)),
+                  ) &&
+                  visit.date.isBefore(weekEnd.add(Duration(days: 1)));
+            case 'completed':
+              return visit.found;
+            case 'scheduled':
+              return !visit.found;
+            default: // 'all'
+              return true;
+          }
+        })
+        .toList();
 
     // Sort by date (newest first)
     filtered.sort((a, b) => b.date.compareTo(a.date));
@@ -346,11 +370,7 @@ class _VisitListScreenState extends State<VisitListScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _getTabIcon(tabType),
-            size: 80,
-            color: Colors.grey.shade400,
-          ),
+          Icon(_getTabIcon(tabType), size: 80, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             'No ${_getTabTitle(tabType)} Found',
@@ -380,10 +400,7 @@ class _VisitListScreenState extends State<VisitListScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: MadadgarTheme.primaryColor,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -422,7 +439,9 @@ class _VisitListScreenState extends State<VisitListScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _getVisitTypeColor(visit.visitType).withOpacity(0.1),
+                      color: _getVisitTypeColor(
+                        visit.visitType,
+                      ).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -455,21 +474,75 @@ class _VisitListScreenState extends State<VisitListScreen>
                       ],
                     ),
                   ),
-                  // Status indicator
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: visit.found ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      visit.found ? 'Completed' : 'Scheduled',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: visit.found ? Colors.green.shade700 : Colors.orange.shade700,
+                  // Status indicator and action button
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: visit.found
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          visit.found ? 'Completed' : 'Scheduled',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: visit.found
+                                ? Colors.green.shade700
+                                : Colors.orange.shade700,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (!visit.found) ...[
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/complete-visit',
+                              arguments: visit.visitId,
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: MadadgarTheme.primaryColor.withOpacity(
+                                0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  size: 12,
+                                  color: MadadgarTheme.primaryColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Complete',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: MadadgarTheme.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -487,7 +560,11 @@ class _VisitListScreenState extends State<VisitListScreen>
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.location_on, size: 14, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.location_on,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -576,7 +653,7 @@ class _VisitListScreenState extends State<VisitListScreen>
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final visitDate = DateTime(date.year, date.month, date.day);
-    
+
     if (visitDate == today) {
       return 'Today ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } else if (visitDate == today.subtract(Duration(days: 1))) {
@@ -617,9 +694,9 @@ class _VisitListScreenState extends State<VisitListScreen>
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Calendar placeholder
           Expanded(
             child: Card(
@@ -676,19 +753,21 @@ class _VisitListScreenState extends State<VisitListScreen>
                   Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.my_location, color: MadadgarTheme.primaryColor),
+                        Icon(
+                          Icons.my_location,
+                          color: MadadgarTheme.primaryColor,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'My Location',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.layers),
-                  ),
+                  IconButton(onPressed: () {}, icon: const Icon(Icons.layers)),
                   IconButton(
                     onPressed: () {},
                     icon: const Icon(Icons.fullscreen),
@@ -697,9 +776,9 @@ class _VisitListScreenState extends State<VisitListScreen>
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Map placeholder
           Expanded(
             child: Card(
@@ -709,11 +788,7 @@ class _VisitListScreenState extends State<VisitListScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.map,
-                      size: 80,
-                      color: Colors.grey.shade400,
-                    ),
+                    Icon(Icons.map, size: 80, color: Colors.grey.shade400),
                     const SizedBox(height: 16),
                     Text(
                       'Map View',
@@ -832,12 +907,12 @@ class _VisitListScreenState extends State<VisitListScreen>
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? MadadgarTheme.primaryColor.withOpacity(0.1)
               : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected 
+            color: isSelected
                 ? MadadgarTheme.primaryColor
                 : Colors.grey.shade200,
           ),

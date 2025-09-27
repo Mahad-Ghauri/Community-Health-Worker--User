@@ -623,6 +623,39 @@ class VisitProvider with ChangeNotifier {
     }
   }
 
+  /// Complete a scheduled visit - Used for updating visit status and details
+  Future<bool> completeVisit({
+    required String visitId,
+    required bool found,
+    required String notes,
+    List<String>? photos,
+  }) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      await VisitService.completeVisit(
+        visitId: visitId,
+        found: found,
+        notes: notes,
+        photos: photos,
+      );
+
+      // Refresh selected visit and list
+      await selectVisit(visitId);
+      await loadVisits();
+      await loadRecentVisits();
+      await loadVisitsSummary();
+
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError('Failed to complete visit: $e');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   /// Add photos to visit
   Future<bool> addPhotosToVisit(String visitId, List<String> photoUrls) async {
     try {

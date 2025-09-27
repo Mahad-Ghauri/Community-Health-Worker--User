@@ -27,6 +27,7 @@ import '../views/screens/visit_list_screen.dart';
 import '../views/screens/visit_details_screen.dart';
 import '../views/screens/new_visit_screen.dart';
 import '../views/screens/edit_visit_screen.dart';
+import '../views/screens/complete_visit_screen.dart';
 
 // Clinical Screens
 import '../views/screens/contact_screening_screen.dart';
@@ -162,6 +163,17 @@ class AppRouter {
         return ElegantRoute.build(const NewVisitScreen());
       case '/edit-visit':
         return ElegantRoute.build(const EditVisitScreen());
+      case '/complete-visit':
+        final visitId = settings.arguments as String?;
+        if (visitId != null) {
+          return ElegantRoute.build(CompleteVisitScreen(visitId: visitId));
+        }
+        return ElegantRoute.build(
+          Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: const Center(child: Text('Visit ID not provided')),
+          ),
+        );
 
       // =================== CLINICAL WORKFLOWS ===================
       case '/contact-screening':
