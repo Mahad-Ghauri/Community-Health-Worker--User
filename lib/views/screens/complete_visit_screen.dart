@@ -331,13 +331,17 @@ class _CompleteVisitScreenState extends State<CompleteVisitScreen> {
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'Patient Found',
-                                          style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w500,
-                                            color: _patientFound
-                                                ? Colors.green.shade700
-                                                : Colors.grey.shade600,
+                                        Flexible(
+                                          child: Text(
+                                            'Patient Found',
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w500,
+                                              color: _patientFound
+                                                  ? Colors.green.shade700
+                                                  : Colors.grey.shade600,
+                                              fontSize: 12,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
@@ -381,13 +385,17 @@ class _CompleteVisitScreenState extends State<CompleteVisitScreen> {
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'Patient Not Found',
-                                          style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w500,
-                                            color: !_patientFound
-                                                ? Colors.orange.shade700
-                                                : Colors.grey.shade600,
+                                        Flexible(
+                                          child: Text(
+                                            'Patient Not Found',
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w500,
+                                              color: !_patientFound
+                                                  ? Colors.orange.shade700
+                                                  : Colors.grey.shade600,
+                                              fontSize: 12,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
@@ -518,14 +526,18 @@ class _CompleteVisitScreenState extends State<CompleteVisitScreen> {
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: _capturePhoto,
-                                  icon: const Icon(Icons.camera_alt),
-                                  label: Text(
-                                    'Take Photo',
-                                    style: GoogleFonts.poppins(),
+                                  icon: const Icon(Icons.camera_alt, size: 18),
+                                  label: Flexible(
+                                    child: Text(
+                                      'Take Photo',
+                                      style: GoogleFonts.poppins(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
+                                      horizontal: 8,
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -537,14 +549,18 @@ class _CompleteVisitScreenState extends State<CompleteVisitScreen> {
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: _pickPhotoFromGallery,
-                                  icon: const Icon(Icons.photo_library),
-                                  label: Text(
-                                    'From Gallery',
-                                    style: GoogleFonts.poppins(),
+                                  icon: const Icon(Icons.photo_library, size: 18),
+                                  label: Flexible(
+                                    child: Text(
+                                      'From Gallery',
+                                      style: GoogleFonts.poppins(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 12,
+                                      horizontal: 8,
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -695,6 +711,7 @@ class _CompleteVisitScreenState extends State<CompleteVisitScreen> {
             child: Text(
               value,
               style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
