@@ -43,6 +43,11 @@ android {
                 "proguard-rules.pro"
             )
             
+            // Don't fail build on missing classes (for optional Flutter features)
+            packaging {
+                resources.excludes.add("META-INF/*.kotlin_module")
+            }
+            
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
