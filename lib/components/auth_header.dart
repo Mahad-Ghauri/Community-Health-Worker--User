@@ -107,10 +107,11 @@ class _AuthHeaderState extends State<AuthHeader>
                 Text(
                   widget.title,
                   style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    letterSpacing: -1,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                    letterSpacing: -0.6,
+                    height: 1.2,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -118,9 +119,10 @@ class _AuthHeaderState extends State<AuthHeader>
                 Text(
                   widget.subtitle,
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black.withOpacity(0.8),
+                    fontSize: 15,
+                    color: Colors.black.withOpacity(0.55),
                     fontWeight: FontWeight.w400,
+                    height: 1.4,
                   ),
                   textAlign: TextAlign.center,
                 ),

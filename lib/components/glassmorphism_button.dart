@@ -2,6 +2,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 
 class GlassmorphismButton extends StatefulWidget {
@@ -33,20 +34,19 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _shimmerAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 180),
       vsync: this,
     );
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _shimmerAnimation = Tween<double>(
       begin: -2,
@@ -61,23 +61,26 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
   }
 
   void _handleTapDown(TapDownDetails details) {
-    setState(() => _isPressed = true);
     _controller.forward();
   }
 
   void _handleTapUp(TapUpDetails details) {
-    setState(() => _isPressed = false);
     _controller.reverse();
   }
 
   void _handleTapCancel() {
-    setState(() => _isPressed = false);
     _controller.reverse();
+  }
+
+  void _handleTap() {
+    HapticFeedback.lightImpact();
+    widget.onPressed?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final isEnabled = !widget.loading && widget.onPressed != null;
+    final baseColor = widget.color ?? Theme.of(context).primaryColor;
 
     return AnimatedBuilder(
       animation: _controller,
@@ -88,7 +91,7 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
             onTapDown: isEnabled ? _handleTapDown : null,
             onTapUp: isEnabled ? _handleTapUp : null,
             onTapCancel: isEnabled ? _handleTapCancel : null,
-            onTap: isEnabled ? widget.onPressed : null,
+            onTap: isEnabled ? _handleTap : null,
             child: Container(
               width: widget.width,
               height: widget.height ?? 56,
@@ -97,25 +100,25 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: _isPressed
+                  colors: isEnabled
                       ? [
-                          Colors.white.withOpacity(0.3),
-                          Colors.white.withOpacity(0.1),
+                          baseColor.withOpacity(0.92),
+                          baseColor.withOpacity(0.78),
                         ]
                       : [
-                          Colors.white.withOpacity(0.25),
-                          Colors.white.withOpacity(0.1),
+                          baseColor.withOpacity(0.45),
+                          baseColor.withOpacity(0.35),
                         ],
                 ),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withOpacity(0.35),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withOpacity(0.1),
+                    color: baseColor.withOpacity(isEnabled ? 0.30 : 0.12),
                     blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -138,7 +141,7 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
                                 end: Alignment(1 + _shimmerAnimation.value, 1),
                                 colors: [
                                   Colors.transparent,
-                                  Colors.white.withOpacity(0.1),
+                                  Colors.white.withOpacity(0.12),
                                   Colors.transparent,
                                 ],
                                 stops: const [0.0, 0.5, 1.0],
@@ -149,13 +152,13 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
                       // Button content
                       Center(
                         child: widget.loading
-                            ? SizedBox(
+                            ? const SizedBox(
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                                  strokeWidth: 2.2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white.withOpacity(0.8),
+                                    Colors.white,
                                   ),
                                 ),
                               )
@@ -176,7 +179,7 @@ class _GlassmorphismButtonState extends State<GlassmorphismButton>
                                       color: Colors.white,
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.5,
+                                      letterSpacing: 0.3,
                                     ),
                                   ),
                                 ],

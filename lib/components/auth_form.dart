@@ -2,6 +2,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:chw_tb/config/theme.dart';
 import 'dart:ui';
 
 class AuthForm extends StatefulWidget {
@@ -69,20 +70,20 @@ class _AuthFormState extends State<AuthForm>
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.teal.withOpacity(0.3),
-                          Colors.teal.withOpacity(0.6),
+                          MadadgarTheme.primaryColor.withOpacity(0.30),
+                          MadadgarTheme.primaryColor.withOpacity(0.55),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: Colors.tealAccent.withOpacity(0.2),
+                        color: Colors.white.withOpacity(0.25),
                         width: 1,
                       ),
                     ),
