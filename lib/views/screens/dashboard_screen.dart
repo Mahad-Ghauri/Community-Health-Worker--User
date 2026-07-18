@@ -8,7 +8,9 @@ import 'package:chw_tb/controllers/providers/patient_provider.dart';
 import 'package:chw_tb/controllers/providers/app_providers.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final VoidCallback? onMenuPressed;
+
+  const DashboardScreen({super.key, this.onMenuPressed});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -173,6 +175,12 @@ class _DashboardScreenState extends State<DashboardScreen>
         children: [
           Row(
             children: [
+              // Menu button
+              IconButton(
+                onPressed: widget.onMenuPressed,
+                icon: const Icon(Icons.menu, color: Colors.white),
+                tooltip: 'Menu',
+              ),
               // User avatar
               CircleAvatar(
                 radius: 24,

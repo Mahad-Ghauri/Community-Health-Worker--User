@@ -22,32 +22,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<NavigationItem> _navigationItems = [
+  List<NavigationItem> get _navigationItems => [
     NavigationItem(
       label: 'Dashboard',
       icon: Icons.dashboard_outlined,
       activeIcon: Icons.dashboard,
-      screen: const DashboardScreen(),
+      screen: DashboardScreen(onMenuPressed: _openDrawer),
     ),
     NavigationItem(
       label: 'Patients',
       icon: Icons.people_outline,
       activeIcon: Icons.people,
-      screen: const PatientListScreen(),
+      screen: PatientListScreen(onMenuPressed: _openDrawer),
     ),
     NavigationItem(
       label: 'Visits',
       icon: Icons.home_outlined,
       activeIcon: Icons.home,
-      screen: const VisitListScreen(),
+      screen: VisitListScreen(onMenuPressed: _openDrawer),
     ),
     NavigationItem(
       label: 'Notifications',
       icon: Icons.notifications_outlined,
       activeIcon: Icons.notifications,
-      screen: const NotificationsListScreen(),
+      screen: NotificationsListScreen(onMenuPressed: _openDrawer),
     ),
   ];
+
+  void _openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);

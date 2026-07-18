@@ -7,7 +7,9 @@ import 'package:chw_tb/controllers/providers/patient_provider.dart';
 import 'package:chw_tb/models/core_models.dart';
 
 class VisitListScreen extends StatefulWidget {
-  const VisitListScreen({super.key});
+  final VoidCallback? onMenuPressed;
+
+  const VisitListScreen({super.key, this.onMenuPressed});
 
   @override
   State<VisitListScreen> createState() => _VisitListScreenState();
@@ -92,6 +94,11 @@ class _VisitListScreenState extends State<VisitListScreen>
             backgroundColor: MadadgarTheme.primaryColor,
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
+            leading: IconButton(
+              onPressed: widget.onMenuPressed,
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menu',
+            ),
             actions: [
               IconButton(
                 onPressed: _showFilterDialog,

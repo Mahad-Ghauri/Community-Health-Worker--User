@@ -8,7 +8,9 @@ import 'package:chw_tb/models/core_models.dart';
 import 'package:chw_tb/config/theme.dart';
 
 class NotificationsListScreen extends StatefulWidget {
-  const NotificationsListScreen({super.key});
+  final VoidCallback? onMenuPressed;
+
+  const NotificationsListScreen({super.key, this.onMenuPressed});
 
   @override
   State<NotificationsListScreen> createState() =>
@@ -118,6 +120,11 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
             backgroundColor: MadadgarTheme.primaryColor,
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
+            leading: IconButton(
+              onPressed: widget.onMenuPressed,
+              icon: const Icon(Icons.menu),
+              tooltip: 'Menu',
+            ),
             actions: [
               IconButton(
                 onPressed: () => _markAllAsRead(),
