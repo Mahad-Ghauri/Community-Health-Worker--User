@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use, avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:chw_tb/config/theme.dart';
@@ -113,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Scaffold(
       backgroundColor: MadadgarTheme.backgroundColor,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const _DashboardSkeleton()
           : Consumer4<PatientProvider, VisitProvider, AppStateProvider, AuthProvider>(
               builder: (context, patientProvider, visitProvider, appStateProvider, authProvider, child) {
                 return SafeArea(
@@ -163,13 +164,15 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildHeader(AppStateProvider appStateProvider, AuthProvider authProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [MadadgarTheme.primaryColor, MadadgarTheme.primaryColor.withOpacity(0.8)],
+          colors: [MadadgarTheme.primaryColor, MadadgarTheme.primaryColor.withOpacity(0.85)],
         ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+        boxShadow: MadadgarTheme.shadowMd,
       ),
       child: Column(
         children: [
@@ -235,8 +238,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.18), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -308,51 +312,47 @@ class _DashboardScreenState extends State<DashboardScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _PressableScale(
       onTap: onTap,
-      child: Card(
-        elevation: 4,
-        shadowColor: color.withOpacity(0.2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
-              ],
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.10), width: 1),
+          boxShadow: MadadgarTheme.shadowSm,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 32,
+            const SizedBox(height: 16),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                height: 1.1,
+                color: Colors.black87,
               ),
-              const SizedBox(height: 12),
-              Text(
-                value,
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: Colors.black54,
               ),
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -415,44 +415,43 @@ class _DashboardScreenState extends State<DashboardScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _PressableScale(
       onTap: onTap,
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
-              ],
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: MadadgarTheme.primaryColor.withOpacity(0.06),
+            width: 1,
+          ),
+          boxShadow: MadadgarTheme.shadowSm,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(icon, color: color, size: 24),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 32,
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+                color: Colors.black87,
               ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
@@ -486,7 +485,17 @@ class _DashboardScreenState extends State<DashboardScreen>
           ],
         ),
         const SizedBox(height: 16),
-        Card(
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: MadadgarTheme.primaryColor.withOpacity(0.06),
+              width: 1,
+            ),
+            boxShadow: MadadgarTheme.shadowSm,
+          ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             children: _buildRecentActivityItems(visitProvider, patientProvider),
           ),
@@ -524,7 +533,12 @@ class _DashboardScreenState extends State<DashboardScreen>
         ));
         
         if (i < recentVisits.length - 1 || recentPatients.isNotEmpty) {
-          items.add(const Divider(height: 1));
+          items.add(Divider(
+            height: 1,
+            thickness: 1,
+            indent: 72,
+            color: MadadgarTheme.primaryColor.withOpacity(0.06),
+          ));
         }
       }
     }
@@ -600,8 +614,14 @@ class _DashboardScreenState extends State<DashboardScreen>
     required Color color,
   }) {
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: color.withOpacity(0.1),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Icon(icon, color: color, size: 20),
       ),
       title: Text(
@@ -621,7 +641,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
       trailing: const Icon(
         Icons.chevron_right,
-        color: Colors.grey,
+        color: Colors.black26,
         size: 20,
       ),
     );
@@ -631,7 +651,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Helper method to get time-based greeting
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    
+
     if (hour < 12) {
       return 'Good Morning!';
     } else if (hour < 17) {
@@ -639,5 +659,130 @@ class _DashboardScreenState extends State<DashboardScreen>
     } else {
       return 'Good Evening!';
     }
+  }
+}
+
+/// UI-only press wrapper: subtle scale-down + light haptic on tap.
+/// Forwards the exact same [onTap] callback — no logic change.
+class _PressableScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _PressableScale({required this.child, required this.onTap});
+
+  @override
+  State<_PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<_PressableScale> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        widget.onTap();
+      },
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Loading skeleton mirroring the dashboard layout — replaces the bare
+/// centered spinner so the screen appears to load in place.
+class _DashboardSkeleton extends StatefulWidget {
+  const _DashboardSkeleton();
+
+  @override
+  State<_DashboardSkeleton> createState() => _DashboardSkeletonState();
+}
+
+class _DashboardSkeletonState extends State<_DashboardSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  Widget _box({double? width, required double height, double radius = 16}) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.45, end: 1.0).animate(
+        CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+      ),
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: MadadgarTheme.primaryColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header placeholder
+            _box(width: double.infinity, height: 140, radius: 0),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _box(width: 160, height: 22, radius: 6),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _box(height: 120)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _box(height: 120)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _box(width: 140, height: 22, radius: 6),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _box(height: 110)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _box(height: 110)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _box(height: 110)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _box(height: 110)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

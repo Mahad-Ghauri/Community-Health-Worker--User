@@ -140,7 +140,13 @@ class _PatientListScreenState extends State<PatientListScreen>
           children: [
             // Search and filter section
             Container(
-              color: MadadgarTheme.primaryColor,
+              decoration: BoxDecoration(
+                color: MadadgarTheme.primaryColor,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
+                boxShadow: MadadgarTheme.shadowMd,
+              ),
               child: Column(
                 children: [
                   Padding(
@@ -172,12 +178,20 @@ class _PatientListScreenState extends State<PatientListScreen>
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 12,
+                          vertical: 14,
                         ),
                       ),
                       onChanged: (value) {
@@ -239,8 +253,9 @@ class _PatientListScreenState extends State<PatientListScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withOpacity(0.14),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.20), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -268,8 +283,9 @@ class _PatientListScreenState extends State<PatientListScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withOpacity(0.14),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.20), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -293,7 +309,7 @@ class _PatientListScreenState extends State<PatientListScreen>
     return Consumer<PatientProvider>(
       builder: (context, patientProvider, child) {
         if (patientProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _PatientListSkeleton();
         }
 
         if (patientProvider.error != null) {
@@ -301,14 +317,26 @@ class _PatientListScreenState extends State<PatientListScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 80, color: Colors.red.shade400),
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: MadadgarTheme.errorColor.withOpacity(0.10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    size: 36,
+                    color: MadadgarTheme.errorColor,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Error Loading Patients',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.red.shade600,
+                    color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -458,7 +486,8 @@ class _PatientListScreenState extends State<PatientListScreen>
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
+                                  backgroundColor:
+                                      MadadgarTheme.secondaryColor,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 20, // Reduced from 24
@@ -565,188 +594,202 @@ class _PatientListScreenState extends State<PatientListScreen>
   Widget _buildPatientCard(Patient patient) {
     final statusColor = _getStatusColor(patient.tbStatus);
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          // Select patient and navigate to details
-          context.read<PatientProvider>().selectPatientDirect(patient);
-          Navigator.pushNamed(
-            context,
-            '/patient-details',
-            arguments: patient.patientId,
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  // Patient avatar
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: MadadgarTheme.primaryColor.withOpacity(
-                      0.1,
-                    ),
-                    child: Text(
-                      patient.name.substring(0, 1).toUpperCase(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: MadadgarTheme.primaryColor,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: MadadgarTheme.primaryColor.withOpacity(0.06),
+          width: 1,
+        ),
+        boxShadow: MadadgarTheme.shadowSm,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // Select patient and navigate to details
+            context.read<PatientProvider>().selectPatientDirect(patient);
+            Navigator.pushNamed(
+              context,
+              '/patient-details',
+              arguments: patient.patientId,
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    // Patient avatar
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: MadadgarTheme.primaryColor.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        patient.name.substring(0, 1).toUpperCase(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: MadadgarTheme.primaryColor,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
+                    const SizedBox(width: 12),
 
-                  // Patient name and ID
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          patient.name,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                    // Patient name and ID
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            patient.name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'ID: ${patient.patientId}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
+                          Text(
+                            'ID: ${patient.patientId}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Status badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _getStatusDisplayName(patient.tbStatus),
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
 
-              const SizedBox(height: 12),
-
-              // Patient details row
-              Row(
-                children: [
-                  // Age and gender
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          patient.gender == 'male' ? Icons.male : Icons.female,
-                          size: 16,
-                          color: Colors.grey.shade600,
+                    // Status badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _getStatusDisplayName(patient.tbStatus),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: statusColor,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${patient.age}y, ${patient.gender}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Patient details row
+                Row(
+                  children: [
+                    // Age and gender
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            patient.gender == 'male'
+                                ? Icons.male
+                                : Icons.female,
+                            size: 16,
                             color: Colors.grey.shade600,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            '${patient.age}y, ${patient.gender}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Phone
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.phone,
-                          size: 16,
-                          color: Colors.grey.shade600,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          patient.phone,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
+                    // Phone
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            size: 16,
                             color: Colors.grey.shade600,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            patient.phone,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              // Registration date
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Registered ${_formatDate(patient.createdAt)}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
+                // Registration date
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
                       color: Colors.grey.shade600,
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // Address
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      patient.address,
+                    const SizedBox(width: 4),
+                    Text(
+                      'Registered ${_formatDate(patient.createdAt)}',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey.shade600,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Address
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        patient.address,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -819,7 +862,7 @@ class _PatientListScreenState extends State<PatientListScreen>
           height: MediaQuery.of(context).size.height * 0.6,
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
@@ -1038,6 +1081,51 @@ class _PatientListScreenState extends State<PatientListScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Loading skeleton mirroring the patient list layout — pulsing card
+/// placeholders instead of a bare centered spinner.
+class _PatientListSkeleton extends StatefulWidget {
+  const _PatientListSkeleton();
+
+  @override
+  State<_PatientListSkeleton> createState() => _PatientListSkeletonState();
+}
+
+class _PatientListSkeletonState extends State<_PatientListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.45, end: 1.0).animate(
+        CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+      ),
+      child: ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: 5,
+        itemBuilder: (context, index) => Container(
+          height: 132,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: MadadgarTheme.primaryColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );

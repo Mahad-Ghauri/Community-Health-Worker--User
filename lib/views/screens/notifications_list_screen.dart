@@ -219,22 +219,24 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
             ),
           ),
           body: notificationProvider.isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      MadadgarTheme.primaryColor,
-                    ),
-                  ),
-                )
+              ? const _NotificationListSkeleton()
               : notificationProvider.error != null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.red[300],
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: MadadgarTheme.errorColor.withOpacity(0.10),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.error_outline,
+                          size: 36,
+                          color: MadadgarTheme.errorColor,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -242,7 +244,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.red[700],
+                          color: Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -302,7 +304,19 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_none, size: 64, color: Colors.grey[400]),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: MadadgarTheme.primaryColor.withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.notifications_none,
+              size: 36,
+              color: MadadgarTheme.primaryColor.withOpacity(0.6),
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             'No notifications',
@@ -326,100 +340,111 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
   Widget _buildNotificationItem(CHWNotification notification) {
     final isUnread = notification.status == 'unread';
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: isUnread ? 3 : 1,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => _handleNotificationTap(notification),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: isUnread
-                ? Border.all(color: MadadgarTheme.primaryColor.withOpacity(0.3))
-                : null,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _buildNotificationIcon(notification.type),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                notification.title,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: isUnread
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            if (isUnread)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: MadadgarTheme.primaryColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            _buildPriorityChip(notification.priority),
-                            const SizedBox(width: 8),
-                            Text(
-                              _formatTimestamp(notification.sentAt),
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                notification.message,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                  height: 1.4,
-                ),
-              ),
-              if (notification.relatedId != null) ...[
-                const SizedBox(height: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isUnread
+              ? MadadgarTheme.primaryColor.withOpacity(0.25)
+              : MadadgarTheme.primaryColor.withOpacity(0.06),
+          width: 1,
+        ),
+        boxShadow: isUnread ? MadadgarTheme.shadowMd : MadadgarTheme.shadowSm,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _handleNotificationTap(notification),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton.icon(
-                      onPressed: () => _handleNotificationAction(notification),
-                      icon: const Icon(Icons.open_in_new, size: 16),
-                      label: Text('View Details', style: GoogleFonts.poppins()),
-                      style: TextButton.styleFrom(
-                        foregroundColor: MadadgarTheme.primaryColor,
+                    _buildNotificationIcon(notification.type),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  notification.title,
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: isUnread
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                              if (isUnread)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: MadadgarTheme.primaryColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              _buildPriorityChip(notification.priority),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatTimestamp(notification.sentAt),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  notification.message,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                ),
+                if (notification.relatedId != null) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () =>
+                            _handleNotificationAction(notification),
+                        icon: const Icon(Icons.open_in_new, size: 16),
+                        label: Text(
+                          'View Details',
+                          style: GoogleFonts.poppins(),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: MadadgarTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -457,10 +482,12 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.all(8),
+      width: 40,
+      height: 40,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: color, size: 20),
     );
@@ -663,6 +690,53 @@ class _NotificationsListScreenState extends State<NotificationsListScreen>
             child: Text('Close', style: GoogleFonts.poppins()),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Loading skeleton mirroring the notification list — pulsing card
+/// placeholders instead of a bare centered spinner.
+class _NotificationListSkeleton extends StatefulWidget {
+  const _NotificationListSkeleton();
+
+  @override
+  State<_NotificationListSkeleton> createState() =>
+      _NotificationListSkeletonState();
+}
+
+class _NotificationListSkeletonState extends State<_NotificationListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(
+        begin: 0.45,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+      child: ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: 5,
+        itemBuilder: (context, index) => Container(
+          height: 120,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: MadadgarTheme.primaryColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:chw_tb/config/theme.dart';
 import 'package:chw_tb/views/screens/dashboard_screen.dart';
@@ -61,6 +63,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+      // Let page content extend behind the floating nav so the
+      // glass blur has real content to diffuse.
+      extendBody: true,
       drawer: _buildNavigationDrawer(),
       body: _navigationItems[_selectedIndex].screen,
       bottomNavigationBar: _buildBottomNavigation(),
@@ -68,39 +73,55 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   Widget _buildBottomNavigation() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          // Soft float shadow — carried outside the clip.
+          boxShadow: MadadgarTheme.shadowLg,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Container(
+              decoration: BoxDecoration(
+                // Light frosted fill — lets the blur read as glass.
+                color: Colors.white.withOpacity(0.65),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.30),
+                  width: 1,
+                ),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+                backgroundColor: Colors.transparent,
+                selectedItemColor: MadadgarTheme.primaryColor,
+                unselectedItemColor: Colors.grey.shade600,
+                selectedLabelStyle: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+                unselectedLabelStyle: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                ),
+                elevation: 0,
+                items: _navigationItems.map((item) {
+                  final isSelected = _navigationItems[_selectedIndex] == item;
+                  return BottomNavigationBarItem(
+                    icon: Icon(isSelected ? item.activeIcon : item.icon),
+                    label: item.label,
+                  );
+                }).toList(),
+              ),
+            ),
           ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.white,
-        selectedItemColor: MadadgarTheme.primaryColor,
-        unselectedItemColor: Colors.grey.shade600,
-        selectedLabelStyle: GoogleFonts.poppins(
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
         ),
-        unselectedLabelStyle: GoogleFonts.poppins(
-          fontWeight: FontWeight.w400,
-          fontSize: 12,
-        ),
-        elevation: 0,
-        items: _navigationItems.map((item) {
-          final isSelected = _navigationItems[_selectedIndex] == item;
-          return BottomNavigationBarItem(
-            icon: Icon(isSelected ? item.activeIcon : item.icon),
-            label: item.label,
-          );
-        }).toList(),
       ),
     );
   }

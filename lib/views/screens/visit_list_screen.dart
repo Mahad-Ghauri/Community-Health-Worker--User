@@ -305,7 +305,7 @@ class _VisitListScreenState extends State<VisitListScreen>
           // Visit list or empty state
           Expanded(
             child: visitProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const _VisitListSkeleton()
                 : filteredVisits.isEmpty
                 ? _buildEmptyState(tabType)
                 : ListView.builder(
@@ -377,7 +377,19 @@ class _VisitListScreenState extends State<VisitListScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(_getTabIcon(tabType), size: 80, color: Colors.grey.shade400),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: MadadgarTheme.primaryColor.withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _getTabIcon(tabType),
+              size: 36,
+              color: MadadgarTheme.primaryColor.withOpacity(0.6),
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             'No ${_getTabTitle(tabType)} Found',
@@ -420,184 +432,196 @@ class _VisitListScreenState extends State<VisitListScreen>
 
   // Build individual visit card
   Widget _buildVisitCard(Visit visit, Patient? patient) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          // Navigate to visit details
-          Navigator.pushNamed(
-            context,
-            '/visit-details',
-            arguments: visit.visitId,
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  // Visit type icon
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _getVisitTypeColor(
-                        visit.visitType,
-                      ).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _getVisitTypeIcon(visit.visitType),
-                      color: _getVisitTypeColor(visit.visitType),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Visit info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          patient?.name ?? 'Unknown Patient',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          _formatVisitType(visit.visitType),
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Status indicator and action button
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: visit.found
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          visit.found ? 'Completed' : 'Scheduled',
-                          style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: visit.found
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
-                          ),
-                        ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: MadadgarTheme.primaryColor.withOpacity(0.06),
+          width: 1,
+        ),
+        boxShadow: MadadgarTheme.shadowSm,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Navigate to visit details
+            Navigator.pushNamed(
+              context,
+              '/visit-details',
+              arguments: visit.visitId,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    // Visit type icon
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _getVisitTypeColor(
+                          visit.visitType,
+                        ).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      if (!visit.found) ...[
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/complete-visit',
-                              arguments: visit.visitId,
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                      child: Icon(
+                        _getVisitTypeIcon(visit.visitType),
+                        color: _getVisitTypeColor(visit.visitType),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Visit info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            patient?.name ?? 'Unknown Patient',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
-                            decoration: BoxDecoration(
-                              color: MadadgarTheme.primaryColor.withOpacity(
-                                0.1,
+                          ),
+                          Text(
+                            _formatVisitType(visit.visitType),
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Status indicator and action button
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: visit.found
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            visit.found ? 'Completed' : 'Scheduled',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: visit.found
+                                  ? Colors.green.shade700
+                                  : Colors.orange.shade700,
+                            ),
+                          ),
+                        ),
+                        if (!visit.found) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/complete-visit',
+                                arguments: visit.visitId,
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.check_circle_outline,
-                                  size: 12,
-                                  color: MadadgarTheme.primaryColor,
+                              decoration: BoxDecoration(
+                                color: MadadgarTheme.primaryColor.withOpacity(
+                                  0.1,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Complete',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_outline,
+                                    size: 12,
                                     color: MadadgarTheme.primaryColor,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Complete',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: MadadgarTheme.primaryColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Date and location
-              Row(
-                children: [
-                  Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDate(visit.date),
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.location_on,
-                    size: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      patient?.address ?? 'Location not available',
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Date and location
+                Row(
+                  children: [
+                    Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDate(visit.date),
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: Colors.grey.shade600,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.location_on,
+                      size: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        patient?.address ?? 'Location not available',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                if (visit.notes.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    visit.notes,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-              if (visit.notes.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  visit.notes,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -861,7 +885,7 @@ class _VisitListScreenState extends State<VisitListScreen>
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
@@ -940,6 +964,51 @@ class _VisitListScreenState extends State<VisitListScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Loading skeleton mirroring the visit list layout — pulsing card
+/// placeholders instead of a bare centered spinner.
+class _VisitListSkeleton extends StatefulWidget {
+  const _VisitListSkeleton();
+
+  @override
+  State<_VisitListSkeleton> createState() => _VisitListSkeletonState();
+}
+
+class _VisitListSkeletonState extends State<_VisitListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(
+        begin: 0.45,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+      child: ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 5,
+        itemBuilder: (context, index) => Container(
+          height: 110,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: MadadgarTheme.primaryColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );
